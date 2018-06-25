@@ -1,0 +1,56 @@
+/*
+ * Copyright 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.example.android.privatethoughts.data;
+
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+
+/**
+ * this class manges the database for Private Thoughts app
+ */
+
+public class JournalDbHelper extends SQLiteOpenHelper{
+
+    public static final String DATABASE_NAME = "journal.db";
+    public static final int DATABASE_VERSION = 1;
+
+    public JournalDbHelper(Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+
+        final String SQL_CREATE_JOURNAL_TABLE =
+                "CREATE TABLE " + JournalContract.JournalEntry.TABLE_NAME + "(" +
+                        JournalContract.JournalEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                        JournalContract.JournalEntry.COLUMN_TIMESTAMP + " INTEGER NOT NULL, " +
+                        JournalContract.JournalEntry.COLUMN_TITLE + " TEXT NOT NULL, " +
+                        JournalContract.JournalEntry.COLUMN_CONTENT + " TEXT, " +
+                        JournalContract.JournalEntry.COLUMN_COLOUR + " TEXT, " +
+                        "UNIQUE (" + JournalContract.JournalEntry.COLUMN_TIMESTAMP + ") ON CONFLICT REPLACE)";
+
+        db.execSQL(SQL_CREATE_JOURNAL_TABLE);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.execSQL("DROP TABLE IF EXISTS " + JournalContract.JournalEntry.TABLE_NAME);
+        onCreate(db);
+    }
+}

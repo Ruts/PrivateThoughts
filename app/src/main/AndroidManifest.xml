@@ -16,6 +16,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <provider
+            android:authorities="@strings/content_value"
+            android:name=".data.JournalProvider"
+            android:exported="false"/>
     </application>
 
 </manifest>
