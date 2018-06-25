@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Private Thoughts</string>
+    <string name="content_value">com.example.android.privatethoughts</string>
 </resources>
