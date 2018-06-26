@@ -18,9 +18,11 @@
         </activity>
 
         <provider
-            android:authorities="@strings/content_value"
             android:name=".data.JournalProvider"
-            android:exported="false"/>
+            android:authorities="@strings/content_value"
+            android:exported="false" />
+
+        <activity android:name=".InsertActivity"></activity>
     </application>
 
 </manifest>
