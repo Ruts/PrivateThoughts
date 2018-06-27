@@ -9,7 +9,7 @@ public class JournalColourUtils {
     public static int getColourResource(Context context, String colour) {
         if (colour.matches("Yellow")) {
             return context.getResources().getColor(R.color.light_yellow);
-        } else if (colour.matches("Pourple")) {
+        } else if (colour.matches("Purple")) {
             return context.getResources().getColor(R.color.light_purple);
         } else if (colour.matches("Red")) {
             return context.getResources().getColor(R.color.light_red);

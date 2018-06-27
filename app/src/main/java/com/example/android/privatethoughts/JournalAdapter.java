@@ -65,10 +65,28 @@ class JournalAdapter extends RecyclerView.Adapter<JournalAdapter.JournalAdapterV
         mCursor.moveToPosition(position);
 
         String title = mCursor.getString(MainActivity.INDEX_JOURNAL_TITLE);
-        holder.titleView.setText(title);
+        StringBuilder subTitle = new StringBuilder();
+
+        if (title.length() > 20){
+            subTitle.append(title.substring(0,20));
+            subTitle.append("...");
+        } else {
+            subTitle.append(title);
+        }
+
+        holder.titleView.setText(subTitle.toString());
 
         String content = mCursor.getString(MainActivity.INDEX_JOURNAL_CONTENT);
-        holder.contentView.setText(content);
+        StringBuilder subContent = new StringBuilder();
+
+        if (content.length() > 30) {
+            subContent.append(content.substring(0,30));
+            subContent.append("....");
+        } else {
+            subContent.append(content);
+        }
+
+        holder.contentView.setText(subContent.toString());
 
         long timestampInMillis = mCursor.getLong(MainActivity.INDEX_JOURNAL_TIMESTAMP);
         String day = JournalDateUtils.getDayString(mContext, timestampInMillis);
@@ -81,7 +99,7 @@ class JournalAdapter extends RecyclerView.Adapter<JournalAdapter.JournalAdapterV
 
         String colour = mCursor.getString(MainActivity.INDEX_JOURNAL_COLOUR);
 
-        if (colour != null || !colour.isEmpty()) {
+        if (colour != null && !(colour.isEmpty())) {
             holder.constraintLayout.setBackgroundColor(JournalColourUtils.getColourResource(mContext, colour));
         }
     }

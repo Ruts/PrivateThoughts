@@ -19,7 +19,6 @@ package com.example.android.privatethoughts.utilities;
 import android.content.Context;
 
 import java.text.SimpleDateFormat;
-import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -27,6 +26,8 @@ import java.util.concurrent.TimeUnit;
  * also passes date inrequred formates
  */
 public class JournalDateUtils {
+    public static final long DAYS_IN_MILLIS = TimeUnit.DAYS.toMillis(1);
+
     public static String getDayString(Context mContext, long timestampInMillis) {
         SimpleDateFormat dayFormat = new SimpleDateFormat("EEE");
         return dayFormat.format(timestampInMillis);
@@ -40,5 +41,15 @@ public class JournalDateUtils {
     public static String getTimeString(Context mContext, long timestampInMillis) {
         SimpleDateFormat timeFormat = new SimpleDateFormat("h:mm a");
         return timeFormat.format(timestampInMillis);
+    }
+
+    public static long normalizeDate(long l) {
+        long daysSinceEpoch = daysElapsedSinceEpoch(l);
+        long milisecondsFromEpoch = daysSinceEpoch * DAYS_IN_MILLIS;
+        return milisecondsFromEpoch;
+    }
+
+    private static long daysElapsedSinceEpoch(long date) {
+        return TimeUnit.MILLISECONDS.toDays(date);
     }
 }
