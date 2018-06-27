@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "734303250499",
+    "firebase_url": "https://privatethoughts-d0296.firebaseio.com",
+    "project_id": "privatethoughts-d0296",
+    "storage_bucket": "privatethoughts-d0296.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:734303250499:android:6663d22a7f0fe966",
+        "android_client_info": {
+          "package_name": "com.example.android.privatethoughts"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "734303250499-kjn3771mqfj3vp8vqccj5mi8m90vp0c8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.android.privatethoughts",
+            "certificate_hash": "883d89e19f585dc68a8108c797f070ce920b87fa"
+          }
+        },
+        {
+          "client_id": "734303250499-a9r45936putkegq1bgbacvov2h6c4uva.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBP7GuhwELSoWWv1lpp8OLry0S6ZTmXeiI"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "734303250499-a9r45936putkegq1bgbacvov2h6c4uva.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
