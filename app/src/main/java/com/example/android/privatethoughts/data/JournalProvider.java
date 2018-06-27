@@ -19,6 +19,7 @@ package com.example.android.privatethoughts.data;
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.UriMatcher;
+import android.database.sqlite.SQLiteDatabase;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -64,14 +65,12 @@ public class JournalProvider extends ContentProvider{
 
         switch (sUriMatcher.match(uri)) {
             case CODE_JOURNAL: {
-                String normalizedTimestamp = uri.getLastPathSegment();
-                String[] selectionParameters = new String[]{normalizedTimestamp};
 
                 cursor = mDbHelper.getReadableDatabase().query(
                         JournalContract.JournalEntry.TABLE_NAME,
                         projection,
                         selection,
-                        selectionParameters,
+                        selectionArgs,
                         null,
                         null,
                         sortOrder);
@@ -79,11 +78,14 @@ public class JournalProvider extends ContentProvider{
                 break;
             }
             case CODE_JOURNAL_WITH_TIMESDTAMP: {
+                String normalizedTimestamp = uri.getLastPathSegment();
+                String[] selectionParameters = new String[]{normalizedTimestamp};
+
                 cursor = mDbHelper.getReadableDatabase().query(
                         JournalContract.JournalEntry.TABLE_NAME,
                         projection,
                         JournalContract.JournalEntry.COLUMN_TIMESTAMP + " = ? ",
-                        selectionArgs,
+                        selectionParameters,
                         null,
                         null,
                         sortOrder);
@@ -104,17 +106,30 @@ public class JournalProvider extends ContentProvider{
         throw new RuntimeException("Methode has yet to be initialized");
     }
 
-    @Nullable
     @Override
-    public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
-        switch (sUriMatcher.match(uri)) {
-            case CODE_JOURNAL: {
-                long _id = mDbHelper.getWritableDatabase().insert(
-                        JournalContract.JournalEntry.TABLE_NAME,
-                        null,
-                        values);
+    public Uri insert(@NonNull Uri uri, @NonNull ContentValues values) {
+        final SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
-                if (_id > 0) {
+        switch (sUriMatcher.match(uri)) {
+            case CODE_JOURNAL:
+                db.beginTransaction();
+                int rowsInserted = 0;
+
+                try {
+                    long _id = mDbHelper.getWritableDatabase().insert(
+                            JournalContract.JournalEntry.TABLE_NAME,
+                            null,
+                            values);
+
+                    if (_id != -1){
+                        rowsInserted++;
+                    }
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+
+                if (rowsInserted > 0) {
                     getContext().getContentResolver().notifyChange(uri, null);
                 }
 
@@ -122,7 +137,6 @@ public class JournalProvider extends ContentProvider{
                         .appendPath(Integer.toString(values.getAsInteger(
                                 JournalContract.JournalEntry.COLUMN_TIMESTAMP)))
                         .build();
-            }
             default:
                 return null;
         }
@@ -166,14 +180,18 @@ public class JournalProvider extends ContentProvider{
     }
 
     @Override
-    public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection, @Nullable String[] selectionArgs) {
+    public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection,
+                      @Nullable String[] selectionArgs) {
         switch (sUriMatcher.match(uri)) {
-            case CODE_JOURNAL: {
+            case CODE_JOURNAL_WITH_TIMESDTAMP: {
+                String normalizedTimastamp = uri.getLastPathSegment();
+                String[] selectionParameters = new String[]{normalizedTimastamp};
+
                 int _id = mDbHelper.getWritableDatabase().update(
                         JournalContract.JournalEntry.TABLE_NAME,
                         values,
-                        selection,
-                        selectionArgs);
+                        JournalContract.JournalEntry.COLUMN_TIMESTAMP + " = ? ",
+                        selectionParameters);
 
                 if (_id > 0) {
                     getContext().getContentResolver().notifyChange(uri, null);

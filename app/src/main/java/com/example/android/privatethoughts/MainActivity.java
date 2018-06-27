@@ -29,6 +29,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.example.android.privatethoughts.data.JournalContract;
 
@@ -101,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements
             case ID_JOURNAL_LOADER:
                 Uri journalQueryUri = JournalContract.JournalEntry.CONTENT_URI;
 
-                String sortOrder = JournalContract.JournalEntry.COLUMN_TIMESTAMP + " ASC";
+                String sortOrder = JournalContract.JournalEntry.COLUMN_TIMESTAMP + " DESC";
 
                 return new CursorLoader(this,
                         journalQueryUri,
@@ -127,6 +128,7 @@ public class MainActivity extends AppCompatActivity implements
             showJournalEntries();
         } else {
             hideLoading();
+            Toast.makeText(this, "Nothing to show", Toast.LENGTH_LONG).show();
         }
     }
 

@@ -20,6 +20,8 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.example.android.privatethoughts.data.JournalContract.JournalEntry;
+
 /**
  * this class manges the database for Private Thoughts app
  */
@@ -38,19 +40,19 @@ public class JournalDbHelper extends SQLiteOpenHelper{
 
         final String SQL_CREATE_JOURNAL_TABLE =
                 "CREATE TABLE " + JournalContract.JournalEntry.TABLE_NAME + "(" +
-                        JournalContract.JournalEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                        JournalContract.JournalEntry.COLUMN_TIMESTAMP + " INTEGER NOT NULL, " +
-                        JournalContract.JournalEntry.COLUMN_TITLE + " TEXT NOT NULL, " +
-                        JournalContract.JournalEntry.COLUMN_CONTENT + " TEXT, " +
-                        JournalContract.JournalEntry.COLUMN_COLOUR + " TEXT, " +
-                        "UNIQUE (" + JournalContract.JournalEntry.COLUMN_TIMESTAMP + ") ON CONFLICT REPLACE)";
+                        JournalEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                        JournalEntry.COLUMN_TIMESTAMP + " INTEGER NOT NULL, " +
+                        JournalEntry.COLUMN_TITLE + " TEXT NOT NULL, " +
+                        JournalEntry.COLUMN_CONTENT + " TEXT, " +
+                        JournalEntry.COLUMN_COLOUR + " TEXT, " +
+                        "UNIQUE (" + JournalEntry.COLUMN_TIMESTAMP + ") ON CONFLICT REPLACE)";
 
         db.execSQL(SQL_CREATE_JOURNAL_TABLE);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + JournalContract.JournalEntry.TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + JournalEntry.TABLE_NAME);
         onCreate(db);
     }
 }
