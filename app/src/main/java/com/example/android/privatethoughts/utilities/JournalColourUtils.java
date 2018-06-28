@@ -11,8 +11,8 @@ public class JournalColourUtils {
             return context.getResources().getColor(R.color.light_yellow);
         } else if (colour.matches("Purple")) {
             return context.getResources().getColor(R.color.light_purple);
-        } else if (colour.matches("Red")) {
-            return context.getResources().getColor(R.color.light_red);
+        } else if (colour.matches("Pink")) {
+            return context.getResources().getColor(R.color.light_pink);
         } else if (colour.matches("Blue")) {
             return context.getResources().getColor(R.color.light_blue);
         } else if (colour.matches("Green")) {

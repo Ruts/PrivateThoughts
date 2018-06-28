@@ -9,7 +9,16 @@
         android:title="@string/action_save"
         app:showAsAction="always"/>
     <item
+        android:id="@+id/action_colour"
+        android:icon="@drawable/ic_color_lens_48px"
+        android:title="@string/action_change_colour"
+        app:showAsAction="always"/>
+    <item
         android:id="@+id/action_delete"
         android:title="@string/action_delete"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/action_logout"
+        android:title="@string/action_logout"
         app:showAsAction="never"/>
 </menu>

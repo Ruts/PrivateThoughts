@@ -27,11 +27,18 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.example.android.privatethoughts.data.JournalContract;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.firebase.auth.FirebaseAuth;
 
 import java.io.File;
 
@@ -56,6 +63,8 @@ public class MainActivity extends AppCompatActivity implements
     public static final int INDEX_JOURNAL_COLOUR = 3;
 
     public static final int ID_JOURNAL_LOADER = 11;
+
+    private GoogleSignInClient mGoogleSignInClient;
 
     private JournalAdapter mJournalAdapter;
     private RecyclerView mRecyclerView;
@@ -94,6 +103,41 @@ public class MainActivity extends AppCompatActivity implements
         showLoading();
 
         getSupportLoaderManager().initLoader(ID_JOURNAL_LOADER, null, this);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater menuInflater = getMenuInflater();
+
+        menuInflater.inflate(R.menu.activity_main, menu);
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.action_logout) {
+            FirebaseAuth.getInstance().signOut();
+
+            GoogleSignInOptions googleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestIdToken(getString(R.string.default_web_client_id))
+                    .requestEmail()
+                    .build();
+
+            mGoogleSignInClient = GoogleSignIn.getClient(this, googleSignInOptions);
+
+
+
+            mGoogleSignInClient.signOut();
+
+            Intent intent = new Intent(this, GoogleLoginActivity.class);
+            startActivity(intent);
+            finish();
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     @Override

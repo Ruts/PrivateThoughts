@@ -8,16 +8,24 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
-    <style name="ActionBar.Solid.Attendance.NoTitle" parent="@android:style/TextAppearance.Holo.Widget.ActionBar.Title">
+    <style name="AppTheme.Dark.Dialog" parent="Theme.AppCompat.Dialog">
+        <item name="colorAccent">@android:color/black</item>
+        <item name="android:textColorPrimary">@color/black</item>
         <item name="android:textColor">@color/black</item>
+        <item name="android:background">@color/colorAccent</item>
     </style>
 
     <style name="MyActionBarTitleText" parent="@android:style/TextAppearance.Holo.Widget.ActionBar.Title">
-        <item name="android:textColor">@color/black</item>
+        <item name="android:textColorPrimary">@color/black</item>
     </style>
 
     <style name="AppTheme.PrivateThoughts" parent="@style/AppTheme">
         <item name="android:actionBarStyle">@style/MyActionBarTitleText</item>
+    </style>
+
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
     </style>
 
 </resources>
