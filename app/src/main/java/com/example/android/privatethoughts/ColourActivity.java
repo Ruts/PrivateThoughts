@@ -28,7 +28,7 @@ import android.widget.RadioButton;
 
 public class ColourActivity extends AppCompatActivity {
 
-    private RadioButton blueRadioButton, redRadioButton, yellowRadioButton,
+    private RadioButton blueRadioButton, pinkRadioButton, yellowRadioButton,
             greenRadioButton, purpleRadioButton, defaultRadioButton;
 
     @Override
@@ -38,7 +38,7 @@ public class ColourActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         blueRadioButton =  findViewById(R.id.rb_blue);
-        redRadioButton = findViewById(R.id.rb_red);
+        pinkRadioButton = findViewById(R.id.rb_pink);
         yellowRadioButton = findViewById(R.id.rb_yellow);
         greenRadioButton = findViewById(R.id.rb_green);
         purpleRadioButton = findViewById(R.id.rb_purple);

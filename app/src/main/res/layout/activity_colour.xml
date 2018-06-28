@@ -22,10 +22,10 @@
             <RadioButton
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/rb_red"
-                android:text="@string/title_red"
+                android:id="@+id/rb_pink"
+                android:text="@string/title_pink"
                 android:onClick="changeColor"
-                android:background="@color/light_red"/>
+                android:background="@color/light_pink"/>
             <RadioButton
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

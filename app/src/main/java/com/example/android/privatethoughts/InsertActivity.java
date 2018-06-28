@@ -36,6 +36,10 @@ import com.example.android.privatethoughts.databinding.ActivityInsertBinding;
 import com.example.android.privatethoughts.utilities.InsertEntry;
 import com.example.android.privatethoughts.utilities.JournalColourUtils;
 import com.example.android.privatethoughts.utilities.JournalDateUtils;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.firebase.auth.FirebaseAuth;
 
 /**
  * activity to display a single journal entry and allows for editing
@@ -47,6 +51,8 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
     private Uri mUri;
 
     private ActivityInsertBinding mActivityInsertBinding;
+
+    private GoogleSignInClient mGoogleSignInClient;
 
     private boolean mNewEntry = true;
 
@@ -88,6 +94,15 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
     }
 
     @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+
+        if (!(mActivityInsertBinding.editTitle.getText().toString().isEmpty())) {
+            onInsert();
+        }
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater menuInflater = getMenuInflater();
 
@@ -101,6 +116,10 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
         int id = item.getItemId();
 
         if (id == android.R.id.home) {
+            if (!(mActivityInsertBinding.editTitle.getText().toString().isEmpty())) {
+                onInsert();
+            }
+
             onBackPressed();
             return true;
         }
@@ -112,9 +131,43 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
             onBackPressed();
         }
 
+        if (id == R.id.action_colour) {
+            Intent intent = new Intent(this, ColourActivity.class);
+
+            if (getIntent().getData() != null) {
+                intent.setData(getIntent().getData());
+            }
+
+            intent.putExtra(TITLE_INDEX, mActivityInsertBinding.editTitle.getText().toString());
+            intent.putExtra(CONTENT_INDEX, mActivityInsertBinding.editContent.getText().toString());
+
+            startActivity(intent);
+        }
+
         if (id == R.id.action_delete) {
             onDelete();
             onBackPressed();
+        }
+
+        if (id == R.id.action_logout) {
+            if (!(mActivityInsertBinding.editTitle.getText().toString().isEmpty())) {
+                onInsert();
+            }
+
+            FirebaseAuth.getInstance().signOut();
+
+            GoogleSignInOptions googleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestIdToken(getString(R.string.default_web_client_id))
+                    .requestEmail()
+                    .build();
+
+            mGoogleSignInClient = GoogleSignIn.getClient(this, googleSignInOptions);
+
+            mGoogleSignInClient.signOut();
+
+            Intent intent = new Intent(this, GoogleLoginActivity.class);
+            startActivity(intent);
+            finish();
         }
 
         return super.onOptionsItemSelected(item);

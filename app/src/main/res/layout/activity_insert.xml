@@ -32,38 +32,48 @@
         android:id="@+id/constraint_layout_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingLeft="@dimen/recycler_view_padding"
+        android:paddingRight="@dimen/recycler_view_padding"
+        android:paddingTop="@dimen/recycler_view_padding">
 
         <LinearLayout
             android:id="@+id/linear_layout_1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
-            <EditText
-                android:id="@+id/edit_title"
-                android:layout_width="0dp"
+            <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="9"
                 android:layout_marginTop="8dp"
-                android:textAppearance="@style/TextAppearance.AppCompat.Title"
-                android:textStyle="bold"
-                android:maxHeight="50dp"
-                android:maxLines="1"
-                tools:text="I Got issues" />
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1">
-                <ImageButton
-                    android:id="@+id/button_edit_colour"
-                    android:layout_width="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:textColor="@android:color/black">
+                <EditText
+                    android:id="@+id/edit_title"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="end"
                     android:layout_marginTop="8dp"
-                    android:onClick="changeColour"
-                    android:src="@drawable/ic_color_lens_48px"/>
-            </LinearLayout>
+                    android:hint="@string/msg_title_hint"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Title"
+                    android:textStyle="bold"
+                    android:maxHeight="50dp"
+                    android:maxLines="2"
+                    tools:text="I Got issues" />
+            </android.support.design.widget.TextInputLayout>
+
+            <!--<LinearLayout-->
+                <!--android:layout_width="0dp"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:layout_weight="1">-->
+                <!--<ImageButton-->
+                    <!--android:id="@+id/button_edit_colour"-->
+                    <!--android:layout_width="wrap_content"-->
+                    <!--android:layout_height="wrap_content"-->
+                    <!--android:layout_gravity="end"-->
+                    <!--android:layout_marginTop="8dp"-->
+                    <!--android:onClick="changeColour"-->
+                    <!--android:src="@drawable/ic_color_lens_48px"/>-->
+            <!--</LinearLayout>-->
         </LinearLayout>
 
         <ScrollView
@@ -74,12 +84,18 @@
             app:layout_constraintTop_toTopOf="@id/guideline"
             app:layout_constraintVertical_bias="0.100000024">
 
-            <EditText
-                android:id="@+id/edit_content"
+            <android.support.design.widget.TextInputLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                tools:text="isdinds csdlncsdicn sdcsdncpisdncsd cdsjl csdoincsdic sdojcn sidocndsi cdsio codsic sdioc osdi co" />
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/black">
+                <EditText
+                    android:id="@+id/edit_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:hint="@string/msg_content_hint"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                    tools:text="isdinds csdlncsdicn sdcsdncpisdncsd cdsjl csdoincsdic sdojcn sidocndsi cdsio codsic sdioc osdi co" />
+            </android.support.design.widget.TextInputLayout>
         </ScrollView>
     </LinearLayout>
 </layout>
