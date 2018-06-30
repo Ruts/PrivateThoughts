@@ -16,6 +16,8 @@
 
 package com.example.android.privatethoughts;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -40,8 +42,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.firebase.auth.FirebaseAuth;
 
-import java.io.File;
-
 /**
  * Main activity with a recyler view containing all the journal entries.
  */
@@ -49,18 +49,23 @@ import java.io.File;
 public class MainActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<Cursor>,
         JournalAdapter.JournalAdapterOnClickHandler {
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     public static final String[] MAIN_JOURNAL_PROJECTION = {
             JournalContract.JournalEntry.COLUMN_TITLE,
             JournalContract.JournalEntry.COLUMN_CONTENT,
             JournalContract.JournalEntry.COLUMN_TIMESTAMP,
-            JournalContract.JournalEntry.COLUMN_COLOUR
+            JournalContract.JournalEntry.COLUMN_COLOUR,
+            JournalContract.JournalEntry.COLUMN_EMAIL,
+            JournalContract.JournalEntry.COLUMN_PASSWORD
     };
 
     public static final int INDEX_JOURNAL_TITLE = 0;
     public static final int INDEX_JOURNAL_CONTENT = 1;
     public static final int INDEX_JOURNAL_TIMESTAMP = 2;
     public static final int INDEX_JOURNAL_COLOUR = 3;
+    public static final int INDEX_JOURNAL_EMAIL = 4;
+    public static final int INDEX_JOURNAL_PASSWORD = 5;
 
     public static final int ID_JOURNAL_LOADER = 11;
 
@@ -128,9 +133,15 @@ public class MainActivity extends AppCompatActivity implements
 
             mGoogleSignInClient = GoogleSignIn.getClient(this, googleSignInOptions);
 
-
-
             mGoogleSignInClient.signOut();
+
+            GoogleLoginActivity.EMAIL_ACCOUNT = null;
+
+            SharedPreferences sharedpreferences =
+                    this.getSharedPreferences(GoogleLoginActivity.MY_PREFRENCES, Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedpreferences.edit();
+            editor.clear();
+            editor.apply();
 
             Intent intent = new Intent(this, GoogleLoginActivity.class);
             startActivity(intent);
@@ -162,6 +173,8 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        getSupportActionBar().setTitle(getString(R.string.app_name) + " (" + data.getCount() + ")");
+
         mJournalAdapter.swapCursor(data);
 
         if (mPosition == RecyclerView.NO_POSITION) mPosition = 0;
@@ -172,7 +185,6 @@ public class MainActivity extends AppCompatActivity implements
             showJournalEntries();
         } else {
             hideLoading();
-            Toast.makeText(this, "Nothing to show", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -184,7 +196,7 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onClick(long timestamp) {
         Intent intent = new Intent(MainActivity.this, InsertActivity.class);
-        Uri uriForTimestampQuery = JournalContract.JournalEntry.buildWeatherUriWithTimestamp(timestamp);
+        Uri uriForTimestampQuery = JournalContract.JournalEntry.buildJournalUriWithTimestamp(timestamp);
         intent.setData(uriForTimestampQuery);
         startActivity(intent);
     }

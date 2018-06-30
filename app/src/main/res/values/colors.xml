@@ -2,8 +2,8 @@
 <resources>
     <color name="colorPrimary">#C0C0C0</color>
     <color name="colorPrimaryDark">#A9A9A9</color>
-    <color name="colorAccent">#FFD700</color>
-    <color name="colorAccentTranslucent">#B3FFD700</color>
+    <color name="colorAccent">#FF5722</color>
+    <color name="colorAccentTranslucent">#B3FF5722</color>
     <color name="selected">#808080</color>
     <color name="light_yellow">#FFFF33</color>
     <color name="light_blue">#ADD8E6</color>

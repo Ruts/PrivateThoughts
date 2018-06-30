@@ -17,7 +17,9 @@
 package com.example.android.privatethoughts;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -29,13 +31,12 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
 
 import com.example.android.privatethoughts.data.JournalContract;
 import com.example.android.privatethoughts.databinding.ActivityInsertBinding;
-import com.example.android.privatethoughts.utilities.InsertEntry;
+import com.example.android.privatethoughts.utilities.TableEventsUtils;
+import com.example.android.privatethoughts.utilities.TableTaskParams;
 import com.example.android.privatethoughts.utilities.JournalColourUtils;
-import com.example.android.privatethoughts.utilities.JournalDateUtils;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -116,10 +117,6 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
         int id = item.getItemId();
 
         if (id == android.R.id.home) {
-            if (!(mActivityInsertBinding.editTitle.getText().toString().isEmpty())) {
-                onInsert();
-            }
-
             onBackPressed();
             return true;
         }
@@ -128,7 +125,7 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
             if (validate()) {
                 onInsert();
             }
-            onBackPressed();
+            finish();
         }
 
         if (id == R.id.action_colour) {
@@ -146,7 +143,7 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
 
         if (id == R.id.action_delete) {
             onDelete();
-            onBackPressed();
+            finish();
         }
 
         if (id == R.id.action_logout) {
@@ -162,8 +159,13 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
                     .build();
 
             mGoogleSignInClient = GoogleSignIn.getClient(this, googleSignInOptions);
-
             mGoogleSignInClient.signOut();
+
+            SharedPreferences sharedpreferences =
+                    this.getSharedPreferences(GoogleLoginActivity.MY_PREFRENCES, Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedpreferences.edit();
+            editor.clear();
+            editor.apply();
 
             Intent intent = new Intent(this, GoogleLoginActivity.class);
             startActivity(intent);
@@ -235,19 +237,6 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
         return passed;
     }
 
-    public void changeColour(View view) {
-        Intent intent = new Intent(this, ColourActivity.class);
-
-        if (getIntent().getData() != null) {
-            intent.setData(getIntent().getData());
-        }
-
-        intent.putExtra(TITLE_INDEX, mActivityInsertBinding.editTitle.getText().toString());
-        intent.putExtra(CONTENT_INDEX, mActivityInsertBinding.editContent.getText().toString());
-
-        startActivity(intent);
-    }
-
     private void setFieldsFromIntent() {
         viewColour = getIntent().getStringExtra(COLOUR_INDEX);
 
@@ -272,17 +261,26 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
         contentValues.put(JournalContract.JournalEntry.COLUMN_CONTENT, content);
         contentValues.put(JournalContract.JournalEntry.COLUMN_TIMESTAMP, timestamp);
         contentValues.put(JournalContract.JournalEntry.COLUMN_COLOUR, viewColour);
+        contentValues.put(JournalContract.JournalEntry.COLUMN_EMAIL, GoogleLoginActivity.EMAIL_ACCOUNT);
 
         if (mNewEntry) {
-            this.getContentResolver().insert(JournalContract.JournalEntry.CONTENT_URI, contentValues);
+            TableTaskParams tableTaskParams =
+                    new TableTaskParams(this, contentValues,
+                            JournalContract.JournalEntry.CONTENT_URI, TableTaskParams.INSERT_INDEX);
+            new TableEventsUtils().execute(tableTaskParams);
         } else {
-            this.getContentResolver().update(mUri, contentValues, null, null);
+            TableTaskParams tableTaskParams =
+                    new TableTaskParams(this, contentValues, mUri, TableTaskParams.UPDATE_INDEX);
+            new TableEventsUtils().execute(tableTaskParams);
         }
     }
 
     private void onDelete() {
         if (!mNewEntry) {
-            this.getContentResolver().delete(mUri, null, null);
+            TableTaskParams tableTaskParams =
+                    new TableTaskParams(this, null, mUri, TableTaskParams.DELETE_INDEX);
+
+            new TableEventsUtils().execute(tableTaskParams);
         }
     }
 }
