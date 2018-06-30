@@ -99,9 +99,9 @@ class JournalAdapter extends RecyclerView.Adapter<JournalAdapter.JournalAdapterV
 
         String colour = mCursor.getString(MainActivity.INDEX_JOURNAL_COLOUR);
 
-        if (colour != null && !(colour.isEmpty())) {
-            holder.constraintLayout.setBackgroundColor(JournalColourUtils.getColourResource(mContext, colour));
-        }
+//        if (colour != null && !(colour.isEmpty())) {
+//            holder.constraintLayout.setBackgroundColor(JournalColourUtils.getColourResource(mContext, colour));
+//        }
     }
 
     @Override

@@ -16,8 +16,13 @@
 
 package com.example.android.privatethoughts.data;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.provider.BaseColumns;
+
+import com.example.android.privatethoughts.GoogleLoginActivity;
 
 /**
  *describes the table structure as well as URL's
@@ -30,27 +35,52 @@ public class JournalContract {
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
 
     public static final String PATH_JOURNAL = "journal";
+    public static final String PATH_JOURNAL_ACCOUNT = "journal_account";
 
     public static final class JournalEntry implements BaseColumns {
-
         public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon()
                 .appendPath(PATH_JOURNAL)
                 .build();
 
-        public static final String TABLE_NAME = "journal";
+        public static final String TABLE_NAME = "journal_";
         public static final String COLUMN_TIMESTAMP = "timestamp";
         public static final String COLUMN_TITLE = "title";
         public static final String COLUMN_CONTENT = "content";
         public static final String COLUMN_COLOUR = "colour";
+        public static final String COLUMN_EMAIL = "email";
+        public static final String COLUMN_PASSWORD = "password";
 
         /**
          * implememnt a uri with a timestamp attached at the end which point to th e table entry
          * @param timestamp the time of the insert or edit normalizzed into milliseconds
          * @return Uri pointing to the specofoc table row corresponding to the timestamp passed
          */
-        public static Uri buildWeatherUriWithTimestamp(long timestamp) {
+        public static Uri buildJournalUriWithTimestamp(long timestamp) {
             return CONTENT_URI.buildUpon()
                     .appendPath(Long.toString(timestamp))
+                    .build();
+        }
+    }
+
+    public static final class JournalAccount implements BaseColumns {
+
+        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon()
+                .appendPath(PATH_JOURNAL_ACCOUNT)
+                .build();
+
+        public static final String TABLE_NAME = "journal_account";
+        public static final String COLUMN_USERNAME = "username";
+        public static final String COLUMN_EMAIL = "email";
+        public static final String COLUMN_PASSWORD = "password";
+
+        /**
+         * implememnt a uri with a timestamp attached at the end which point to th e table entry
+         * @param email the time of the insert or edit normalizzed into milliseconds
+         * @return Uri pointing to the specofoc table row corresponding to the timestamp passed
+         */
+        public static Uri buildJournalAccountUriWithEmail(String email) {
+            return CONTENT_URI.buildUpon()
+                    .appendPath(email)
                     .build();
         }
     }

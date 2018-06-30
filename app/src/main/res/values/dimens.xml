@@ -6,9 +6,14 @@
     <dimen name="recycler_view_padding_12dp">12dp</dimen>
     <dimen name="edit_text_max_height">25dp</dimen>
 
-    <dimen name="tiltle_text_size">20sp</dimen>
-    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="tiltle_text_size">25sp</dimen>
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="activity_font_size_group">20sp</dimen>
+    <dimen name="padding_top_login_activity">40dp</dimen>
+    <dimen name="side_padding_loginactivity">24dp</dimen>
+    <dimen name="layout_max_width">400dp</dimen>
+    <dimen name="text_size_exit">15sp</dimen>
+    <dimen name="image_size_logo">80dp</dimen>
+    <dimen name="button_padding">5dp</dimen>
 </resources>

@@ -21,6 +21,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.example.android.privatethoughts.data.JournalContract.JournalEntry;
+import com.example.android.privatethoughts.data.JournalContract.JournalAccount;
 
 /**
  * this class manges the database for Private Thoughts app
@@ -29,7 +30,7 @@ import com.example.android.privatethoughts.data.JournalContract.JournalEntry;
 public class JournalDbHelper extends SQLiteOpenHelper{
 
     public static final String DATABASE_NAME = "journal.db";
-    public static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 5;
 
     public JournalDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -39,20 +40,33 @@ public class JournalDbHelper extends SQLiteOpenHelper{
     public void onCreate(SQLiteDatabase db) {
 
         final String SQL_CREATE_JOURNAL_TABLE =
-                "CREATE TABLE " + JournalContract.JournalEntry.TABLE_NAME + "(" +
+                "CREATE TABLE " + JournalEntry.TABLE_NAME + "(" +
                         JournalEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                         JournalEntry.COLUMN_TIMESTAMP + " INTEGER NOT NULL, " +
                         JournalEntry.COLUMN_TITLE + " TEXT NOT NULL, " +
                         JournalEntry.COLUMN_CONTENT + " TEXT, " +
                         JournalEntry.COLUMN_COLOUR + " TEXT, " +
+                        JournalEntry.COLUMN_EMAIL + " TEXT NOT NULL, " +
+                        JournalEntry.COLUMN_PASSWORD + " TEXT, " +
                         "UNIQUE (" + JournalEntry.COLUMN_TIMESTAMP + ") ON CONFLICT REPLACE)";
 
         db.execSQL(SQL_CREATE_JOURNAL_TABLE);
+
+        final String SQL_CREATE_JOURNAL_ACCOUNT_TABLE =
+                "CREATE TABLE " + JournalAccount.TABLE_NAME + "(" +
+                        JournalAccount._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                        JournalAccount.COLUMN_USERNAME + " INTEGER NOT NULL, " +
+                        JournalAccount.COLUMN_EMAIL + " TEXT NOT NULL, " +
+                        JournalAccount.COLUMN_PASSWORD + " INTEGER NOT NULL, " +
+                        "UNIQUE (" + JournalAccount.COLUMN_EMAIL + ") ON CONFLICT REPLACE)";
+
+        db.execSQL(SQL_CREATE_JOURNAL_ACCOUNT_TABLE);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + JournalEntry.TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + JournalAccount.TABLE_NAME);
         onCreate(db);
     }
 }

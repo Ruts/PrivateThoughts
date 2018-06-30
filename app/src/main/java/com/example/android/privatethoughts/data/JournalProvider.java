@@ -25,6 +25,8 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.example.android.privatethoughts.GoogleLoginActivity;
+
 /**
  * this class is th content provider for the Private Thoughts app.
  * it insert, updates, deletes and queries.
@@ -34,6 +36,8 @@ public class JournalProvider extends ContentProvider{
 
     public static final int CODE_JOURNAL = 100;
     public static final int CODE_JOURNAL_WITH_TIMESDTAMP = 101;
+    public static final int CODE_JOURNAL_ACCOUNT = 102;
+    public static final int CODE_JOURNAL_ACCOUNT_WITH_EMAIL = 103;
 
     private static final UriMatcher sUriMatcher = buildUriMatcher();
     private JournalDbHelper mDbHelper;
@@ -48,6 +52,8 @@ public class JournalProvider extends ContentProvider{
 
         uriMatcher.addURI(authority, JournalContract.PATH_JOURNAL, CODE_JOURNAL);
         uriMatcher.addURI(authority, JournalContract.PATH_JOURNAL + "/#", CODE_JOURNAL_WITH_TIMESDTAMP);
+        uriMatcher.addURI(authority, JournalContract.PATH_JOURNAL_ACCOUNT, CODE_JOURNAL_ACCOUNT);
+        uriMatcher.addURI(authority, JournalContract.PATH_JOURNAL_ACCOUNT + "/#", CODE_JOURNAL_ACCOUNT_WITH_EMAIL);
 
         return uriMatcher;
     }
@@ -65,9 +71,38 @@ public class JournalProvider extends ContentProvider{
 
         switch (sUriMatcher.match(uri)) {
             case CODE_JOURNAL: {
+                String[] selectionParameters = new String[]{GoogleLoginActivity.EMAIL_ACCOUNT};
 
                 cursor = mDbHelper.getReadableDatabase().query(
                         JournalContract.JournalEntry.TABLE_NAME,
+                        projection,
+                        JournalContract.JournalEntry.COLUMN_EMAIL + " = ? ",
+                        selectionParameters,
+                        null,
+                        null,
+                        sortOrder);
+
+                break;
+            }
+            case CODE_JOURNAL_WITH_TIMESDTAMP: {
+                String normalizedTimestamp = uri.getLastPathSegment();
+                String[] selectionParameters = new String[]{normalizedTimestamp, GoogleLoginActivity.EMAIL_ACCOUNT};
+
+                cursor = mDbHelper.getReadableDatabase().query(
+                        JournalContract.JournalEntry.TABLE_NAME,
+                        projection,
+                        JournalContract.JournalEntry.COLUMN_TIMESTAMP + " = ? "
+                                + " AND " + JournalContract.JournalEntry.COLUMN_EMAIL + " = ? ",
+                        selectionParameters,
+                        null,
+                        null,
+                        sortOrder);
+
+                break;
+            }
+            case CODE_JOURNAL_ACCOUNT: {
+               cursor = mDbHelper.getReadableDatabase().query(
+                        JournalContract.JournalAccount.TABLE_NAME,
                         projection,
                         selection,
                         selectionArgs,
@@ -77,14 +112,14 @@ public class JournalProvider extends ContentProvider{
 
                 break;
             }
-            case CODE_JOURNAL_WITH_TIMESDTAMP: {
-                String normalizedTimestamp = uri.getLastPathSegment();
-                String[] selectionParameters = new String[]{normalizedTimestamp};
+            case CODE_JOURNAL_ACCOUNT_WITH_EMAIL: {
+                String emailAddress = uri.getLastPathSegment();
+                String[] selectionParameters = new String[]{emailAddress};
 
                 cursor = mDbHelper.getReadableDatabase().query(
-                        JournalContract.JournalEntry.TABLE_NAME,
+                        JournalContract.JournalAccount.TABLE_NAME,
                         projection,
-                        JournalContract.JournalEntry.COLUMN_TIMESTAMP + " = ? ",
+                        JournalContract.JournalAccount.COLUMN_EMAIL + " = ? ",
                         selectionParameters,
                         null,
                         null,
@@ -111,7 +146,7 @@ public class JournalProvider extends ContentProvider{
         final SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
         switch (sUriMatcher.match(uri)) {
-            case CODE_JOURNAL:
+            case CODE_JOURNAL: {
                 db.beginTransaction();
                 int rowsInserted = 0;
 
@@ -121,7 +156,7 @@ public class JournalProvider extends ContentProvider{
                             null,
                             values);
 
-                    if (_id != -1){
+                    if (_id != -1) {
                         rowsInserted++;
                     }
                     db.setTransactionSuccessful();
@@ -137,6 +172,33 @@ public class JournalProvider extends ContentProvider{
                         .appendPath(Integer.toString(values.getAsInteger(
                                 JournalContract.JournalEntry.COLUMN_TIMESTAMP)))
                         .build();
+            }
+            case CODE_JOURNAL_ACCOUNT: {
+                db.beginTransaction();
+                int rowsInserted = 0;
+
+                try {
+                    long _id = mDbHelper.getWritableDatabase().insert(
+                            JournalContract.JournalAccount.TABLE_NAME,
+                            null,
+                            values);
+
+                    if (_id != -1) {
+                        rowsInserted++;
+                    }
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+
+                if (rowsInserted > 0) {
+                    getContext().getContentResolver().notifyChange(uri, null);
+                }
+
+                return uri.buildUpon()
+                        .appendPath(values.getAsString(JournalContract.JournalAccount.COLUMN_EMAIL))
+                        .build();
+            }
             default:
                 return null;
         }
@@ -159,11 +221,31 @@ public class JournalProvider extends ContentProvider{
             }
             case CODE_JOURNAL_WITH_TIMESDTAMP: {
                 String normalizedTimastamp = uri.getLastPathSegment();
-                String[] selectionParameters = new String[]{normalizedTimastamp};
+                String[] selectionParameters = new String[]{normalizedTimastamp, GoogleLoginActivity.EMAIL_ACCOUNT};
 
                 countRowsDeleted = mDbHelper.getWritableDatabase().delete(
                         JournalContract.JournalEntry.TABLE_NAME,
-                        JournalContract.JournalEntry.COLUMN_TIMESTAMP + " = ? ",
+                        JournalContract.JournalEntry.COLUMN_TIMESTAMP + " = ? "
+                                + " AND " + JournalContract.JournalEntry.COLUMN_EMAIL + " = ? ",
+                        selectionParameters);
+
+                break;
+            }
+            case CODE_JOURNAL_ACCOUNT: {
+                countRowsDeleted = mDbHelper.getWritableDatabase().delete(
+                        JournalContract.JournalAccount.TABLE_NAME,
+                        selection,
+                        selectionArgs);
+
+                break;
+            }
+            case CODE_JOURNAL_ACCOUNT_WITH_EMAIL: {
+                String emailAddress = uri.getLastPathSegment();
+                String[] selectionParameters = new String[]{emailAddress};
+
+                countRowsDeleted = mDbHelper.getWritableDatabase().delete(
+                        JournalContract.JournalAccount.TABLE_NAME,
+                        JournalContract.JournalAccount.COLUMN_EMAIL + " = ? ",
                         selectionParameters);
 
                 break;
@@ -185,12 +267,29 @@ public class JournalProvider extends ContentProvider{
         switch (sUriMatcher.match(uri)) {
             case CODE_JOURNAL_WITH_TIMESDTAMP: {
                 String normalizedTimastamp = uri.getLastPathSegment();
-                String[] selectionParameters = new String[]{normalizedTimastamp};
+                String[] selectionParameters = new String[]{normalizedTimastamp, GoogleLoginActivity.EMAIL_ACCOUNT};
 
                 int _id = mDbHelper.getWritableDatabase().update(
                         JournalContract.JournalEntry.TABLE_NAME,
                         values,
-                        JournalContract.JournalEntry.COLUMN_TIMESTAMP + " = ? ",
+                        JournalContract.JournalEntry.COLUMN_TIMESTAMP + " = ? "
+                                + " AND " + JournalContract.JournalEntry.COLUMN_EMAIL + " = ? ",
+                        selectionParameters);
+
+                if (_id > 0) {
+                    getContext().getContentResolver().notifyChange(uri, null);
+                }
+
+                return _id;
+            }
+            case CODE_JOURNAL_ACCOUNT_WITH_EMAIL: {
+                String emailAddress = uri.getLastPathSegment();
+                String[] selectionParameters = new String[]{emailAddress};
+
+                int _id = mDbHelper.getWritableDatabase().update(
+                        JournalContract.JournalAccount.TABLE_NAME,
+                        values,
+                        JournalContract.JournalAccount.COLUMN_EMAIL + " = ? ",
                         selectionParameters);
 
                 if (_id > 0) {
@@ -204,21 +303,48 @@ public class JournalProvider extends ContentProvider{
         }
     }
 
-    public int getCount() {
-        Cursor cursor;
+    public int getCount(@NonNull Uri uri) {
+        int count = 0;
 
-        cursor = mDbHelper.getReadableDatabase().query(
-                JournalContract.JournalEntry.TABLE_NAME,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null);
+        switch (sUriMatcher.match(uri)) {
+            case CODE_JOURNAL: {
+                String[] selectionParameters = new String[]{GoogleLoginActivity.EMAIL_ACCOUNT};
 
-        int count = cursor.getCount();
+                Cursor cursor;
+                cursor = mDbHelper.getReadableDatabase().query(
+                        JournalContract.JournalEntry.TABLE_NAME,
+                        null,
+                        JournalContract.JournalEntry.COLUMN_EMAIL + " = ? ",
+                        selectionParameters,
+                        null,
+                        null,
+                        null);
 
-        cursor.close();
+                count = cursor.getCount();
+
+                cursor.close();
+
+                break;
+            }
+            case CODE_JOURNAL_ACCOUNT: {
+                Cursor cursor;
+                cursor = mDbHelper.getReadableDatabase().query(
+                        JournalContract.JournalAccount.TABLE_NAME,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
+
+                count = cursor.getCount();
+
+                cursor.close();
+                break;
+            }
+            default:
+                throw new UnsupportedOperationException("unable to match URI: " + uri);
+        }
 
         return count;
     }
