@@ -28,10 +28,9 @@ import android.support.annotation.Nullable;
 import com.example.android.privatethoughts.LoginActivity;
 
 /**
- * this class is th content provider for the Private Thoughts app.
+ * content provider class for the Private Thoughts app.
  * it insert, updates, deletes and queries.
  */
-
 public class JournalProvider extends ContentProvider{
 
     public static final int CODE_JOURNAL = 100;
@@ -43,8 +42,8 @@ public class JournalProvider extends ContentProvider{
     private JournalDbHelper mDbHelper;
 
     /**
-     *implements a uri matcher that compares a uri to CODE_JOURNAL or CODE_JOURNAL_WITH_TIMESDTAMP
-     * @return a uri matcher that distinguishes between CODE_JOURNAL_WITH_TIMESDTAMP and CODE_JOURNAL uris
+     *implements a uri matcher for uri matching
+     * @return a uri matcher that with all codes loaded
      */
     public static UriMatcher buildUriMatcher() {
         final UriMatcher uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
@@ -58,17 +57,33 @@ public class JournalProvider extends ContentProvider{
         return uriMatcher;
     }
 
+    /**
+     * Initialize content provider on startup
+     * @return true if successfully loaded
+     */
     @Override
     public boolean onCreate() {
         mDbHelper = new JournalDbHelper(getContext());
         return true;
     }
 
+    /**
+     *Handles Query requests
+     * @param uri           URI to quey
+     * @param projection    list of columns requested, if null, loads all
+     * @param selection     selection criteria for filter, if null, no filter added
+     * @param selectionArgs values of the filter
+     * @param sortOrder     arrangment of the coursor
+     * @return cursor containing the info
+     */
     @Override
     public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection,
                         @Nullable String[] selectionArgs, @Nullable String sortOrder) {
         Cursor cursor;
 
+        /**
+         * Switch function based on uri passed after comparing it to the predifined uris using the uri matcher
+         */
         switch (sUriMatcher.match(uri)) {
             case CODE_JOURNAL: {
                 String[] selectionParameters = new String[]{LoginActivity.EMAIL_ACCOUNT};
@@ -135,12 +150,21 @@ public class JournalProvider extends ContentProvider{
         return cursor;
     }
 
+    /**
+     * funtion not needed hence not implemented
+     */
     @Nullable
     @Override
     public String getType(@NonNull Uri uri) {
         throw new RuntimeException("Methode has yet to be initialized");
     }
 
+    /**
+     * Handles inisertions to the database
+     * @param uri       the uri of the table
+     * @param values    the values to be inserted
+     * @return the uri pointing to the new table entry
+     */
     @Override
     public Uri insert(@NonNull Uri uri, @NonNull ContentValues values) {
         final SQLiteDatabase db = mDbHelper.getReadableDatabase();
@@ -204,6 +228,13 @@ public class JournalProvider extends ContentProvider{
         }
     }
 
+    /**
+     * Handles deletion from the tables
+     * @param uri           URI poitning to the table entry to be deleted
+     * @param selection     selection criteria for filter, if null, no filter added
+     * @param selectionArgs values of the filter
+     * @return the number of rows deleted
+     */
     @Override
     public int delete(@NonNull Uri uri, @Nullable String selection, @Nullable String[] selectionArgs) {
         int countRowsDeleted;
@@ -261,6 +292,14 @@ public class JournalProvider extends ContentProvider{
         return countRowsDeleted;
     }
 
+    /**
+     * Handled updates to the table
+     * @param uri           URI of the table entry to e changed
+     * @param values        new value
+     * @param selection     selection criteria for filter, if null, no filter added
+     * @param selectionArgs values of the filter
+     * @return number of rows added
+     */
     @Override
     public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection,
                       @Nullable String[] selectionArgs) {
@@ -303,6 +342,11 @@ public class JournalProvider extends ContentProvider{
         }
     }
 
+    /**
+     * Handles counting number of rows
+     * @param uri table URI
+     * @return the number of roes from te chosen table
+     */
     public int getCount(@NonNull Uri uri) {
         int count = 0;
 

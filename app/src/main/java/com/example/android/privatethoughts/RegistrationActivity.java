@@ -1,3 +1,19 @@
+/*
+ * Copyright 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.example.android.privatethoughts;
 
 import android.content.ContentValues;
@@ -22,6 +38,9 @@ import com.example.android.privatethoughts.utilities.TableEventsUtils;
 import com.example.android.privatethoughts.utilities.TableTaskParams;
 import com.example.android.privatethoughts.utilities.VerificationTransformationUtils;
 
+/**
+ * Class that defines teh registration process
+ */
 public class RegistrationActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
     public static final int ID_JOURNAL_ACCOUNT_LOADER = 33;
 
@@ -31,6 +50,10 @@ public class RegistrationActivity extends AppCompatActivity implements LoaderMan
 
     private Cursor mCursor;
 
+    /**
+     * Initialize the activity and its views
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,6 +93,9 @@ public class RegistrationActivity extends AppCompatActivity implements LoaderMan
         getSupportLoaderManager().initLoader(ID_JOURNAL_ACCOUNT_LOADER, null, this);
     }
 
+    /**
+     * Defines actions to be taken when back is pressed
+     */
     @Override
     public void onBackPressed() {
         super.onBackPressed();
@@ -77,10 +103,17 @@ public class RegistrationActivity extends AppCompatActivity implements LoaderMan
         startActivity(intent);
     }
 
+    /**
+     * Set the eamil account of the user signing up
+     * @param emailAccount of new user
+     */
     private void setEmailAccount(String emailAccount){
         LoginActivity.EMAIL_ACCOUNT = VerificationTransformationUtils.getEmailString(emailAccount);
     }
 
+    /**
+     * Set the shared prefrences with the information of the new user
+     */
     private void setSharedPrefrences() {
         mSharedPreferences = getSharedPreferences(LoginActivity.MY_PREFRENCES, Context.MODE_PRIVATE);
 
@@ -91,12 +124,15 @@ public class RegistrationActivity extends AppCompatActivity implements LoaderMan
         editor.apply();
     }
 
+    /**
+     * Inserts an account in the table
+     */
     private void insertAccount() {
         ContentValues contentValues = new ContentValues();
 
         String fullName =  mFullName.getText().toString();
         String email =  mEmail.getText().toString();
-        int password =  LoginActivity.DEFAULT_PASSWORD;
+        int password;
 
         try {
             password = Integer.parseInt(mPassword.getText().toString());
@@ -116,6 +152,10 @@ public class RegistrationActivity extends AppCompatActivity implements LoaderMan
         new TableEventsUtils().execute(tableTaskParams);
     }
 
+    /**
+     * Validate the edit text views
+     * @return true if data is valide, false otherwise
+     */
     private boolean valide() {
         boolean valide = true;
 
@@ -179,6 +219,12 @@ public class RegistrationActivity extends AppCompatActivity implements LoaderMan
         return valide;
     }
 
+    /**
+     * Creats loader and performs cursor loading from databse
+     * @param id    od loader
+     * @param args  variables passed to loader
+     * @return cursor with data from the database
+     */
     @NonNull
     @Override
     public Loader<Cursor> onCreateLoader(int id, @Nullable Bundle args) {
@@ -198,12 +244,20 @@ public class RegistrationActivity extends AppCompatActivity implements LoaderMan
         }
     }
 
+    /**
+     * Defines action to be taken after loader creation is finished. sets the fields if the information exists
+     * @param loader that has performed teh action
+     * @param data information recieved;
+     */
     @Override
     public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
         mCursor = data;
-
     }
 
+    /**
+     * Defines action to be taken when the loader is reset
+     * @param loader that has been executed
+     */
     @Override
     public void onLoaderReset(@NonNull Loader<Cursor> loader) {
 

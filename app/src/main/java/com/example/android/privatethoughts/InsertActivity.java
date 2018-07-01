@@ -47,9 +47,8 @@ import com.example.android.privatethoughts.utilities.JournalColourUtils;
 import com.google.android.gms.common.util.ArrayUtils;
 
 /**
- * activity to display a single journal entry and allows for editing
+ * Activity to display a single journal entry and allows for editing
  */
-
 public class InsertActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
     private static final int ID_DETAIL_JOURNAL = 22;
     private static final String JOURNAL_SHARE_HASHTAG = " #PrivateThoughts";
@@ -68,6 +67,10 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
 
     private MenuItem mLock, mUnlock;
 
+    /**
+     * Create finction that initializes the activity and binder
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,6 +86,9 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
         }
     }
 
+    /**
+     * Defines actions to be taken when back is pressed. app should save entry if Title isnt null
+     */
     @Override
     public void onBackPressed() {
         super.onBackPressed();
@@ -92,6 +98,11 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
         }
     }
 
+    /**
+     * Initialize the app bar menu. defines viziility of the lock and unlock menu item basedon presence of password
+     * @param menu to be initialized
+     * @return true for when menu is initialized
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater menuInflater = getMenuInflater();
@@ -111,6 +122,11 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
         return true;
     }
 
+    /**
+     * Defines actions to be taken when a menu item is clicked
+     * @param item the menu option clicked
+     * @return true after action is performed
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
@@ -120,11 +136,17 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
         View dialogLayout = layoutInflater.inflate(R.layout.dialog_set_password, null);
         final EditText mPasswordEdit = dialogLayout.findViewById(R.id.edit_entry_password);
 
+        /**
+         * Defines action to be taken when the back arrow it clicked, peromed back press
+         */
         if (id == android.R.id.home) {
             onBackPressed();
             return true;
         }
 
+        /**
+         * Defines action to be taken when save action is pressed. validiates teh saved the journal entry
+         */
         if (id == R.id.action_save) {
             if (validate()) {
                 onInsert();
@@ -133,6 +155,9 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
             return true;
         }
 
+        /**
+         * Defines action to be taken when lock item is clicked. shows dialogue for the user to enter the password
+         */
         if (id == R.id.action_lock) {
             builder.setView(dialogLayout)
                     .setTitle(getString(R.string.msg_lock))
@@ -154,6 +179,9 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
             return true;
         }
 
+        /**
+         * Defines action to be taken when unlock is pressed. shows dialogue for user to confirm password then unlocks
+         */
         if (id == R.id.action_unlock) {
             builder.setView(dialogLayout)
                     .setTitle(getString(R.string.msg_unlock_password))
@@ -180,6 +208,9 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
             return true;
         }
 
+        /**
+         * Defines action to be taken when colour item is clicked. shows dialogue for colour picking
+         */
         if (id == R.id.action_colour) {
             final int currentColor = ArrayUtils.indexOf(getResources().getStringArray(R.array.colour_choices), viewColour);
 
@@ -203,6 +234,9 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
             return true;
         }
 
+        /**
+         * Defines action to be taken when share is clicked. creates a share intent. Verifies password if locked
+         */
         if (id == R.id.action_share) {
             final Intent shareIntent = createShareJournalIntent();
             final PackageManager packageManager = this.getPackageManager();
@@ -239,6 +273,9 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
             return true;
         }
 
+        /**
+         * Defines action to be taken when delete id pressed. shows dialogue to confirm before deleting
+         */
         if (id == R.id.action_delete) {
             final AlertDialog.Builder builderDelete = new AlertDialog.Builder(this);
             builderDelete.setIcon(R.drawable.ic_delete_48px)
@@ -280,6 +317,9 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
             return true;
         }
 
+        /**
+         * Defines action to be taken when logout is clicked. calls log out function
+         */
         if (id == R.id.action_logout) {
             if (!(mActivityInsertBinding.editTitle.getText().toString().isEmpty())) {
                 onInsert();
@@ -296,6 +336,12 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * Creats loader and performed cursor loading from databse
+     * @param id    of the loader
+     * @param args  arguments passed
+     * @return cursor with data from database
+     */
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
@@ -313,6 +359,11 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
         }
     }
 
+    /**
+     * Defines action to be taken after loader creation is finished. sets the fields if the information exists
+     * @param loader that has performed teh action
+     * @param data information recieved;
+     */
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         mCursor = data;
@@ -342,13 +393,17 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
         }
     }
 
+    /**
+     * Defines action to be taken when the loader is reset
+     * @param loader that has been executed
+     */
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
 
     }
 
     /**
-     * validates fields to be sent to database
+     * Validates fields to be sent to database
      * @return true if fields are okay, false otherwise
      */
     private boolean validate(){
@@ -364,6 +419,9 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
         return passed;
     }
 
+    /**
+     * Defines action to be taken when filed are to be inserted to the database.
+     */
     private void onInsert(){
         ContentValues contentValues = new ContentValues();
 
@@ -390,6 +448,9 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
         }
     }
 
+    /**
+     *     Defines action to be taken when an entry is to be deleted from teh database
+     */
     private void onDelete() {
         if (!mNewEntry) {
             TableTaskParams tableTaskParams =
@@ -399,6 +460,10 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
         }
     }
 
+    /**
+     * Creates an intent for sharing
+     * @return an intent
+     */
     private Intent createShareJournalIntent() {
         Intent intent = ShareCompat.IntentBuilder.from(this)
                 .setType("text/Plain")
@@ -409,15 +474,25 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
         return intent;
     }
 
+    /**
+     * Shows the snakc bar
+     * @param message to be shown in snack bar
+     */
     private void showSnackbar(String message) {
         Snackbar.make(mActivityInsertBinding.constraintLayoutView, message, Snackbar.LENGTH_LONG).show();
     }
 
+    /**
+     * Shows the unlock menu item and hied the lock item
+     */
     public void showUnlockMenuItem() {
         mUnlock.setVisible(true);
         mLock.setVisible(false);
     }
 
+    /**
+     * Shows the lock menu item and hied the unlock item
+     */
     public void showLockMenuItem() {
         mUnlock.setVisible(false);
         mLock.setVisible(true);

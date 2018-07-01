@@ -45,7 +45,6 @@ import com.example.android.privatethoughts.utilities.MenuUtils;
 /**
  * Main activity with a recyler view containing all the journal entries.
  */
-
 public class MainActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<Cursor>,
         JournalAdapter.JournalAdapterOnClickHandler {
@@ -78,6 +77,10 @@ public class MainActivity extends AppCompatActivity implements
     private FloatingActionButton mButtonAddJournalEntry;
     private int mPosition = RecyclerView.NO_POSITION;
 
+    /**
+     * Implements the activity and its views
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -111,6 +114,11 @@ public class MainActivity extends AppCompatActivity implements
         getSupportLoaderManager().initLoader(ID_JOURNAL_LOADER, null, this);
     }
 
+    /**
+     * Initializ the action bar menu
+     * @param menu to be initialized
+     * @return tru when initialized
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater menuInflater = getMenuInflater();
@@ -120,6 +128,11 @@ public class MainActivity extends AppCompatActivity implements
         return true;
     }
 
+    /**
+     * Defines action to be taken when a menu item is clicked
+     * @param item the menu item clicked
+     * @return true after action is perfomed
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
@@ -136,6 +149,12 @@ public class MainActivity extends AppCompatActivity implements
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * Creats loader and performs cursor loading from databse
+     * @param id    of the loader
+     * @param args  arguments passed
+     * @return cursor with data from database
+     */
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         switch (id) {
@@ -156,6 +175,11 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    /**
+     * Defines action to be taken after loader creation is finished. sets the fields if the information exists
+     * @param loader that has performed teh action
+     * @param data information recieved;
+     */
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         getSupportActionBar().setTitle(getString(R.string.app_name) + " (" + data.getCount() + ")");
@@ -173,11 +197,20 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    /**
+     * Defines action to be taken when the loader is reset
+     * @param loader that has been executed
+     */
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         mJournalAdapter.swapCursor(null);
     }
 
+    /**
+     * On click listener for recycler view item
+     * @param timestamp the time of the entry
+     * @param password the password if any
+     */
     @Override
     public void onClick(long timestamp, final String password) {
         final Intent intent = new Intent(MainActivity.this, InsertActivity.class);
@@ -216,6 +249,10 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    /**
+     * Show snack bar
+     * @param message to shown
+     */
     private void showSnackbar(String message) {
         Snackbar.make(mFrameLayout, message, Snackbar.LENGTH_LONG).show();
     }

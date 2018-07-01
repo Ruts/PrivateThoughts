@@ -24,18 +24,25 @@ import com.example.android.privatethoughts.data.JournalContract.JournalEntry;
 import com.example.android.privatethoughts.data.JournalContract.JournalAccount;
 
 /**
- * this class manges the database for Private Thoughts app
+ * this class manages the database for Private Thoughts app
  */
-
 public class JournalDbHelper extends SQLiteOpenHelper{
 
     public static final String DATABASE_NAME = "journal.db";
     public static final int DATABASE_VERSION = 5;
 
+    /**
+     * Initializes the class
+     * @param context of the app
+     */
     public JournalDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
+    /**
+     * Creates the database and tables
+     * @param db The database
+     */
     @Override
     public void onCreate(SQLiteDatabase db) {
 
@@ -63,6 +70,12 @@ public class JournalDbHelper extends SQLiteOpenHelper{
         db.execSQL(SQL_CREATE_JOURNAL_ACCOUNT_TABLE);
     }
 
+    /**
+     * Recreates the databse incase of any change to its structure
+     * @param db the database
+     * @param oldVersion previouse version code
+     * @param newVersion new version code
+     */
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + JournalEntry.TABLE_NAME);
