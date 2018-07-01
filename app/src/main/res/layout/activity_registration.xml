@@ -106,7 +106,6 @@
                     android:layout_gravity="center"
                     android:textColorHint="@color/colorAccent">
 
-                    <!-- Get Pin -->
                     <EditText
                         android:id="@+id/edit_password"
                         android:layout_width="match_parent"

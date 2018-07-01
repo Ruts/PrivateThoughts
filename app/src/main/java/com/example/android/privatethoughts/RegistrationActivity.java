@@ -46,7 +46,7 @@ public class RegistrationActivity extends AppCompatActivity implements LoaderMan
         mBackButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(RegistrationActivity.this, GoogleLoginActivity.class);
+                Intent intent = new Intent(RegistrationActivity.this, LoginActivity.class);
                 startActivity(intent);
                 finish();
             }
@@ -73,21 +73,21 @@ public class RegistrationActivity extends AppCompatActivity implements LoaderMan
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        Intent intent = new Intent(RegistrationActivity.this, GoogleLoginActivity.class);
+        Intent intent = new Intent(RegistrationActivity.this, LoginActivity.class);
         startActivity(intent);
     }
 
     private void setEmailAccount(String emailAccount){
-        GoogleLoginActivity.EMAIL_ACCOUNT = VerificationTransformationUtils.getEmailString(emailAccount);
+        LoginActivity.EMAIL_ACCOUNT = VerificationTransformationUtils.getEmailString(emailAccount);
     }
 
     private void setSharedPrefrences() {
-        mSharedPreferences = getSharedPreferences(GoogleLoginActivity.MY_PREFRENCES, Context.MODE_PRIVATE);
+        mSharedPreferences = getSharedPreferences(LoginActivity.MY_PREFRENCES, Context.MODE_PRIVATE);
 
         SharedPreferences.Editor editor = mSharedPreferences.edit();
 
-        editor.putString(GoogleLoginActivity.EMAIL_KEY, mEmail.getText().toString());
-        editor.putInt(GoogleLoginActivity.PASSWORD_KEY, Integer.parseInt(mPassword.getText().toString()));
+        editor.putString(LoginActivity.EMAIL_KEY, mEmail.getText().toString());
+        editor.putInt(LoginActivity.PASSWORD_KEY, Integer.parseInt(mPassword.getText().toString()));
         editor.apply();
     }
 
@@ -96,7 +96,7 @@ public class RegistrationActivity extends AppCompatActivity implements LoaderMan
 
         String fullName =  mFullName.getText().toString();
         String email =  mEmail.getText().toString();
-        int password =  GoogleLoginActivity.DEFAULT_PASSWORD;
+        int password =  LoginActivity.DEFAULT_PASSWORD;
 
         try {
             password = Integer.parseInt(mPassword.getText().toString());
@@ -130,7 +130,7 @@ public class RegistrationActivity extends AppCompatActivity implements LoaderMan
                 mCursor.moveToFirst();
 
                 do {
-                    if (mCursor.getString(GoogleLoginActivity.INDEX_JOURNAL_ACCOUNT_EMAIL).matches(email)) {
+                    if (mCursor.getString(LoginActivity.INDEX_JOURNAL_ACCOUNT_EMAIL).matches(email)) {
                         mFullName.setError(getString(R.string.error_taken_email));
                         valide = false;
                         break;
@@ -188,7 +188,7 @@ public class RegistrationActivity extends AppCompatActivity implements LoaderMan
 
                 return new CursorLoader(this,
                         journalQueryUri,
-                        GoogleLoginActivity.MAIN_JOURNAL_ACCOUNT_PROJECTION,
+                        LoginActivity.MAIN_JOURNAL_ACCOUNT_PROJECTION,
                         null,
                         null,
                         null);

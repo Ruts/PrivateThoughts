@@ -16,7 +16,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".GoogleLoginActivity"
+            android:name=".LoginActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -41,10 +41,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
         </activity>
-        <activity
-            android:name=".ColourActivity"
-            android:label="@string/title_colour"
-            android:theme="@style/AppTheme.PrivateThoughts" />
 
         <provider
             android:name=".data.JournalProvider"

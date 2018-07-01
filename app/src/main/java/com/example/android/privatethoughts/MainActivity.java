@@ -16,8 +16,9 @@
 
 package com.example.android.privatethoughts;
 
-import android.content.Context;
-import android.content.SharedPreferences;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -29,18 +30,17 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import com.example.android.privatethoughts.data.JournalContract;
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.firebase.auth.FirebaseAuth;
+import com.example.android.privatethoughts.utilities.MenuUtils;
 
 /**
  * Main activity with a recyler view containing all the journal entries.
@@ -69,20 +69,21 @@ public class MainActivity extends AppCompatActivity implements
 
     public static final int ID_JOURNAL_LOADER = 11;
 
-    private GoogleSignInClient mGoogleSignInClient;
+    public static final String INDEX_PROTECTED = "protected";
 
     private JournalAdapter mJournalAdapter;
+    private FrameLayout mFrameLayout;
     private RecyclerView mRecyclerView;
-    private int mPosition = RecyclerView.NO_POSITION;
-
     private ProgressBar mLoaderIndicator;
     private FloatingActionButton mButtonAddJournalEntry;
+    private int mPosition = RecyclerView.NO_POSITION;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mFrameLayout = findViewById(R.id.frame_activity_main);
         mButtonAddJournalEntry = findViewById(R.id.button_add_journal_entry);
         mRecyclerView = findViewById(R.id.recycler_view_journal);
         mLoaderIndicator = findViewById(R.id.pb_load_indicator);
@@ -124,28 +125,12 @@ public class MainActivity extends AppCompatActivity implements
         int id = item.getItemId();
 
         if (id == R.id.action_logout) {
-            FirebaseAuth.getInstance().signOut();
+            MenuUtils.logoutAction(this);
 
-            GoogleSignInOptions googleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestIdToken(getString(R.string.default_web_client_id))
-                    .requestEmail()
-                    .build();
-
-            mGoogleSignInClient = GoogleSignIn.getClient(this, googleSignInOptions);
-
-            mGoogleSignInClient.signOut();
-
-            GoogleLoginActivity.EMAIL_ACCOUNT = null;
-
-            SharedPreferences sharedpreferences =
-                    this.getSharedPreferences(GoogleLoginActivity.MY_PREFRENCES, Context.MODE_PRIVATE);
-            SharedPreferences.Editor editor = sharedpreferences.edit();
-            editor.clear();
-            editor.apply();
-
-            Intent intent = new Intent(this, GoogleLoginActivity.class);
+            Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
             finish();
+            return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -194,11 +179,45 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onClick(long timestamp) {
-        Intent intent = new Intent(MainActivity.this, InsertActivity.class);
+    public void onClick(long timestamp, final String password) {
+        final Intent intent = new Intent(MainActivity.this, InsertActivity.class);
         Uri uriForTimestampQuery = JournalContract.JournalEntry.buildJournalUriWithTimestamp(timestamp);
         intent.setData(uriForTimestampQuery);
-        startActivity(intent);
+
+        if (password != null && !(password.isEmpty())) {
+            intent.putExtra(INDEX_PROTECTED, true);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            LayoutInflater layoutInflater = this.getLayoutInflater();
+            View dialogLayout = layoutInflater.inflate(R.layout.dialog_set_password, null);
+            final EditText mPasswordEdit = dialogLayout.findViewById(R.id.edit_entry_password);
+
+            builder.setView(dialogLayout)
+                    .setTitle(getString(R.string.msg_unlock_password))
+                    .setPositiveButton(R.string.msg_unlock, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            String passwordEdit = mPasswordEdit.getText().toString();
+
+                            if (passwordEdit != null && !(passwordEdit.isEmpty())) {
+                                if (password.matches(passwordEdit)) {
+                                    startActivity(intent);
+                                } else {
+                                    showSnackbar(getString(R.string.error_incorrect_password));
+                                }
+                            } else {
+                                showSnackbar(getString(R.string.error_incorrect_password));
+                            }
+                        }
+                    })
+                    .setNegativeButton(R.string.msg_exit, null)
+                    .show();
+        } else {
+            startActivity(intent);
+        }
+    }
+
+    private void showSnackbar(String message) {
+        Snackbar.make(mFrameLayout, message, Snackbar.LENGTH_LONG).show();
     }
 
     /**

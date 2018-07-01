@@ -16,13 +16,8 @@
 
 package com.example.android.privatethoughts.data;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.net.Uri;
-import android.preference.PreferenceManager;
 import android.provider.BaseColumns;
-
-import com.example.android.privatethoughts.GoogleLoginActivity;
 
 /**
  *describes the table structure as well as URL's

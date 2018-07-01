@@ -51,5 +51,18 @@
     <string name="error_no_full_name">Please enter full name</string>
     <string name="error_password_match">Password does not match</string>
     <string name="error_taken_email">Email already registered</string>
+    <string name="msg_background_image">Background image</string>
+    <string name="action_lock">Lock</string>
+    <string name="action_share">Share</string>
+    <string name="action_unlock">Unlock</string>
+    <string name="msg_delete">Delete</string>
+    <string name="msg_confirm_deletion">Confirm delete</string>
+    <string name="msg_set">Set</string>
+    <string name="error_passowrd_hint">Please enter valid password</string>
+    <string name="msg_unlock_password">Unlock, Enter password below</string>
+    <string name="msg_lock">Lock, Enter password below</string>
+    <string name="msg_unlock">Unlock</string>
+    <string name="error_cant_send">No application found to share entry</string>
+    <string name="msg_choose_colour">Choose colour</string>
 
 </resources>
