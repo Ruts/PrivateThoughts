@@ -16,6 +16,7 @@
 
 package com.example.android.privatethoughts;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -24,6 +25,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -36,6 +38,7 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -92,6 +95,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderManager.Lo
     private TextView mRegistrationButton, mLoginButton, mExitButton;
     private EditText mPassword;
     private AutoCompleteTextView mEmailAddress;
+    private RelativeLayout mRelativeLayout;
 
     public static final String MY_PREFRENCES = "my_prefrences";
     public static final String EMAIL_KEY = "email_key";
@@ -109,6 +113,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderManager.Lo
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+        mRelativeLayout = findViewById(R.id.relative_layout_login);
         mLoaderIndicatorSignIn = findViewById(R.id.pb_load_indicator_sign_in);
         mLoaderIndicatorAccount = findViewById(R.id.pb_load_indicator_account_names);
         mEmailAddress = findViewById(R.id.textview_email);
@@ -272,11 +277,16 @@ public class LoginActivity extends AppCompatActivity implements LoaderManager.Lo
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        showProgressDialog();
 
         if (requestCode == RC_SIGN_IN) {
-            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-            handleSignInResult(task);
+            if (resultCode == Activity.RESULT_OK) {
+                Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+                showProgressDialog();
+                handleSignInResult(task);
+            } else {
+                showSnackbar(getString(R.string.error_login_failed));
+                showSignInButton();
+            }
         }
     }
 
@@ -312,7 +322,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderManager.Lo
                             googleSignIn(firebaseUser);
                         } else {
                             showSignInButton();
-                            Toast.makeText(LoginActivity.this, getString(R.string.msg_failed_login), Toast.LENGTH_SHORT).show();
+                            showSnackbar(getString(R.string.error_incorrect_password));
                         }
                     }
                 });
@@ -338,6 +348,14 @@ public class LoginActivity extends AppCompatActivity implements LoaderManager.Lo
      */
     private void setEmailAccount(String emailAccount){
         EMAIL_ACCOUNT = VerificationTransformationUtils.getEmailString(emailAccount);
+    }
+
+    /**
+     * Show snack bar
+     * @param message to shown
+     */
+    private void showSnackbar(String message) {
+        Snackbar.make(mRelativeLayout, message, Snackbar.LENGTH_LONG).show();
     }
 
     /**

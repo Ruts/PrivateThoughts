@@ -64,5 +64,6 @@
     <string name="msg_unlock">Unlock</string>
     <string name="error_cant_send">No application found to share entry</string>
     <string name="msg_choose_colour">Choose colour</string>
+    <string name="error_login_failed">Unable to login via gmail. Check internet connection</string>
 
 </resources>
