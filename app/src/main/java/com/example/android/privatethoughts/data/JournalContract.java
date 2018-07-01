@@ -20,9 +20,8 @@ import android.net.Uri;
 import android.provider.BaseColumns;
 
 /**
- *describes the table structure as well as URL's
+ *Defines the table structure as well as URL's
  */
-
 public class JournalContract {
 
     public static final String CONTENT_AUTHORITY = "com.example.android.privatethoughts";
@@ -32,6 +31,9 @@ public class JournalContract {
     public static final String PATH_JOURNAL = "journal";
     public static final String PATH_JOURNAL_ACCOUNT = "journal_account";
 
+    /**
+     *Inner class to definr journal entries table contents and structuer
+     */
     public static final class JournalEntry implements BaseColumns {
         public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon()
                 .appendPath(PATH_JOURNAL)
@@ -46,9 +48,9 @@ public class JournalContract {
         public static final String COLUMN_PASSWORD = "password";
 
         /**
-         * implememnt a uri with a timestamp attached at the end which point to th e table entry
+         * Builds a uri with a timestamp attached at the end which points to the table entry
          * @param timestamp the time of the insert or edit normalizzed into milliseconds
-         * @return Uri pointing to the specofoc table row corresponding to the timestamp passed
+         * @return Uri pointing to the specific table row corresponding to the timestamp passed
          */
         public static Uri buildJournalUriWithTimestamp(long timestamp) {
             return CONTENT_URI.buildUpon()
@@ -57,6 +59,9 @@ public class JournalContract {
         }
     }
 
+    /**
+     * Inner class to define user accounts content and table
+     */
     public static final class JournalAccount implements BaseColumns {
 
         public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon()
@@ -69,9 +74,9 @@ public class JournalContract {
         public static final String COLUMN_PASSWORD = "password";
 
         /**
-         * implememnt a uri with a timestamp attached at the end which point to th e table entry
-         * @param email the time of the insert or edit normalizzed into milliseconds
-         * @return Uri pointing to the specofoc table row corresponding to the timestamp passed
+         * Builds a uri with an email string attached at the end which points to the table entry
+         * @param email is the email address of the user
+         * @return Uri pointing to the specific table row corresponding to the timestamp passed
          */
         public static Uri buildJournalAccountUriWithEmail(String email) {
             return CONTENT_URI.buildUpon()

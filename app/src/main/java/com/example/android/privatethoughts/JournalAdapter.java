@@ -31,9 +31,8 @@ import com.example.android.privatethoughts.utilities.JournalColourUtils;
 import com.example.android.privatethoughts.utilities.JournalDateUtils;
 
 /**
- * implements and loads the recyler view with data
+ * Implements and loads the recyler view with data
  */
-
 class JournalAdapter extends RecyclerView.Adapter<JournalAdapter.JournalAdapterViewHolder> {
 
     private final Context mContext;
@@ -42,15 +41,29 @@ class JournalAdapter extends RecyclerView.Adapter<JournalAdapter.JournalAdapterV
 
     private final JournalAdapterOnClickHandler mClickHandler;
 
+    /**
+     * Creates an interface to define the onclick parameters
+     */
     public interface JournalAdapterOnClickHandler{
         void onClick(long timestamp, String password);
     }
 
+    /**
+     * Initializes the journal adapter
+     * @param context           of the app
+     * @param onClickHandler    defined teh onclock function
+     */
     public JournalAdapter(@NonNull Context context, JournalAdapterOnClickHandler onClickHandler) {
         mContext = context;
         mClickHandler = onClickHandler;
     }
 
+    /**
+     * Defined the view holder for the recycler
+     * @param parent    view parent
+     * @param viewType  type of view
+     * @return initialized view holder
+     */
     @Override
     public JournalAdapterViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         int layoutId = R.layout.journal_list_item;
@@ -61,6 +74,11 @@ class JournalAdapter extends RecyclerView.Adapter<JournalAdapter.JournalAdapterV
         return new JournalAdapterViewHolder(view);
     }
 
+    /**
+     * Sets the view with the proper values
+     * @param holder    the view holder
+     * @param position  the position of the view
+     */
     @Override
     public void onBindViewHolder(@NonNull JournalAdapterViewHolder holder, int position) {
         mCursor.moveToPosition(position);
@@ -78,9 +96,9 @@ class JournalAdapter extends RecyclerView.Adapter<JournalAdapter.JournalAdapterV
         holder.titleView.setText(subTitle.toString());
 
         long timestampInMillis = mCursor.getLong(MainActivity.INDEX_JOURNAL_TIMESTAMP);
-        String day = JournalDateUtils.getDayString(mContext, timestampInMillis);
-        String date = JournalDateUtils.getDateString(mContext, timestampInMillis);
-        String time = JournalDateUtils.getTimeString(mContext, timestampInMillis);
+        String day = JournalDateUtils.getDayString(timestampInMillis);
+        String date = JournalDateUtils.getDateString(timestampInMillis);
+        String time = JournalDateUtils.getTimeString(timestampInMillis);
 
         holder.dayView.setText(day);
         holder.dateView.setText(date);
@@ -99,17 +117,28 @@ class JournalAdapter extends RecyclerView.Adapter<JournalAdapter.JournalAdapterV
         }
     }
 
+    /**
+     * Gets number of items in the recyler view
+     * @return number of items
+     */
     @Override
     public int getItemCount() {
         if (null == mCursor) return 0;
         return mCursor.getCount();
     }
 
+    /**
+     * Swaps old cursor with new cursor
+     * @param newCursor the new cursor
+     */
     void swapCursor(Cursor newCursor) {
         mCursor = newCursor;
         notifyDataSetChanged();
     }
 
+    /**
+     * Inner class to implement the view holder
+     */
     class JournalAdapterViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         final TextView titleView;
         final TextView dayView;
@@ -118,6 +147,10 @@ class JournalAdapter extends RecyclerView.Adapter<JournalAdapter.JournalAdapterV
         final ImageView lockView;
         final ConstraintLayout constraintLayout;
 
+        /**
+         * Sets the values of the view
+         * @param view the view
+         */
         JournalAdapterViewHolder(View view) {
             super(view);
 
@@ -131,6 +164,10 @@ class JournalAdapter extends RecyclerView.Adapter<JournalAdapter.JournalAdapterV
             view.setOnClickListener(this);
         }
 
+        /**
+         * Defines the action to be performed when entry clicked
+         * @param v the view tat was clicked
+         */
         @Override
         public void onClick(View v) {
             int adapterPosition = getAdapterPosition();

@@ -63,7 +63,6 @@
                     android:layout_gravity="center"
                     android:textColorHint="@color/colorAccent">
 
-                    <!-- Get Full Name -->
                     <EditText
                         android:id="@+id/edit_full_name"
                         android:layout_width="match_parent"
@@ -86,7 +85,6 @@
                     android:layout_gravity="center"
                     android:textColorHint="@color/colorAccent">
 
-                    <!-- Get Email -->
                     <EditText
                         android:id="@+id/edit_email"
                         android:layout_width="match_parent"
@@ -106,7 +104,6 @@
                     android:layout_gravity="center"
                     android:textColorHint="@color/colorAccent">
 
-                    <!-- Get Pin -->
                     <EditText
                         android:id="@+id/edit_password"
                         android:layout_width="match_parent"
@@ -125,7 +122,6 @@
                     android:layout_gravity="center"
                     android:textColorHint="@color/colorAccent">
 
-                    <!-- Get Pin -->
                     <EditText
                         android:id="@+id/edit_password_confirmation"
                         android:layout_width="match_parent"

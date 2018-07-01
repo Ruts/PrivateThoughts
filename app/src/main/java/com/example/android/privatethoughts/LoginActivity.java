@@ -62,7 +62,6 @@ import java.util.List;
 /**
  *activity for google authentication
  */
-
 public class LoginActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
     private static final String TAG = LoginActivity.class.getSimpleName();
 
@@ -101,6 +100,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderManager.Lo
 
     public static String EMAIL_ACCOUNT;
 
+    /**
+     * Activity to define the log in process
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -188,6 +191,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderManager.Lo
         }
     }
 
+    /**
+     * Validates the information before log in
+     * @return trur if information is valid, false otherwise
+     */
     private boolean valid() {
         boolean valid = true;
 
@@ -224,6 +231,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderManager.Lo
         return valid;
     }
 
+    /**
+     * Defines actions to be performed when the acticity starts. Check if a google account is already logged in
+     */
     @Override
     protected void onStart() {
         super.onStart();
@@ -232,6 +242,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderManager.Lo
         googleSignIn(firebaseUser);
     }
 
+    /**
+     * Signs in a google account
+     * @param account to be signed in
+     */
     private void googleSignIn(FirebaseUser account) {
         if (account != null) {
             Intent intent = new Intent(this, MainActivity.class);
@@ -240,12 +254,21 @@ public class LoginActivity extends AppCompatActivity implements LoaderManager.Lo
         }
     }
 
+    /**
+     * Signs in if not a google account
+     */
     private void signIn() {
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
         finish();
     }
 
+    /**
+     * Defines actions to be performed when
+     * @param requestCode code of the request
+     * @param resultCode code showing the success of te request
+     * @param data intent that was passed
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -257,6 +280,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderManager.Lo
         }
     }
 
+    /**
+     * Attempts to sign in a google account
+     * @param task action to be perfomed
+     */
     private void handleSignInResult(Task<GoogleSignInAccount> task) {
         try {
             GoogleSignInAccount googleAccount = task.getResult(ApiException.class);
@@ -269,6 +296,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderManager.Lo
         }
     }
 
+    /**
+     * Checks credentials of account
+     * @param googleSignInAccount account signed in
+     */
     private void firebaseAuthWithGoogle(GoogleSignInAccount googleSignInAccount) {
         AuthCredential authCredential = GoogleAuthProvider.getCredential(googleSignInAccount.getIdToken(), null);
 
@@ -287,6 +318,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderManager.Lo
                 });
     }
 
+    /**
+     * Edits the shared prefrences
+     * @param emailAccount email account signed in
+     */
     private void editSharedPrefrences(String emailAccount){
         mSharedPreferences = getSharedPreferences(MY_PREFRENCES, Context.MODE_PRIVATE);
 
@@ -297,6 +332,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderManager.Lo
         editor.apply();
     }
 
+    /**
+     * sets teh email account of the signed in user
+     * @param emailAccount email account
+     */
     private void setEmailAccount(String emailAccount){
         EMAIL_ACCOUNT = VerificationTransformationUtils.getEmailString(emailAccount);
     }
@@ -336,6 +375,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderManager.Lo
         mEmailAddress.requestFocus();
     }
 
+    /**
+     * Creats loader and performed cursor loading from databse
+     * @param id    of the loader
+     * @param args  arguments passed
+     * @return cursor with data from database
+     */
     @NonNull
     @Override
     public Loader<Cursor> onCreateLoader(int id, @Nullable Bundle args) {
@@ -355,6 +400,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderManager.Lo
         }
     }
 
+    /**
+     * Defines action to be taken after loader creation is finished. sets the fields if the information exists
+     * @param loader that has performed teh action
+     * @param data information recieved;
+     */
     @Override
     public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
         mCursor = data;
@@ -387,6 +437,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderManager.Lo
         showEmailView();
     }
 
+    /**
+     * Defines action to be taken when the loader is reset
+     * @param loader that has been executed
+     */
     @Override
     public void onLoaderReset(@NonNull Loader<Cursor> loader) {
 

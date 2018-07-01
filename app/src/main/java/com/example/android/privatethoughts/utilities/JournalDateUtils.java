@@ -16,8 +16,6 @@
 
 package com.example.android.privatethoughts.utilities;
 
-import android.content.Context;
-
 import java.text.SimpleDateFormat;
 import java.util.concurrent.TimeUnit;
 
@@ -26,30 +24,33 @@ import java.util.concurrent.TimeUnit;
  * also passes date inrequred formates
  */
 public class JournalDateUtils {
-    public static final long DAYS_IN_MILLIS = TimeUnit.DAYS.toMillis(1);
-
-    public static String getDayString(Context mContext, long timestampInMillis) {
+    /**
+     * Creates a string for the day
+     * @param timestampInMillis time in millis
+     * @return the string showing the day
+     */
+    public static String getDayString(long timestampInMillis) {
         SimpleDateFormat dayFormat = new SimpleDateFormat("EEE");
         return dayFormat.format(timestampInMillis);
     }
 
-    public static String getDateString(Context mContext, long timestampInMillis) {
+    /**
+     * Creates the date string
+     * @param timestampInMillis time in millis
+     * @return string showing date
+     */
+    public static String getDateString(long timestampInMillis) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d, ''yy");
         return dateFormat.format(timestampInMillis);
     }
 
-    public static String getTimeString(Context mContext, long timestampInMillis) {
+    /**
+     * Creates time string
+     * @param timestampInMillis time in millis
+     * @return string showing time
+     */
+    public static String getTimeString(long timestampInMillis) {
         SimpleDateFormat timeFormat = new SimpleDateFormat("h:mm a");
         return timeFormat.format(timestampInMillis);
-    }
-
-    public static long normalizeDate(long l) {
-        long daysSinceEpoch = daysElapsedSinceEpoch(l);
-        long milisecondsFromEpoch = daysSinceEpoch * DAYS_IN_MILLIS;
-        return milisecondsFromEpoch;
-    }
-
-    private static long daysElapsedSinceEpoch(long date) {
-        return TimeUnit.MILLISECONDS.toDays(date);
     }
 }
