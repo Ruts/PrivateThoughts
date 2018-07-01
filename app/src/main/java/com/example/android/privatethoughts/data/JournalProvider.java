@@ -25,22 +25,25 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.example.android.privatethoughts.LoginActivity;
+
 /**
- * this class is th content provider for the Private Thoughts app.
+ * content provider class for the Private Thoughts app.
  * it insert, updates, deletes and queries.
  */
-
 public class JournalProvider extends ContentProvider{
 
     public static final int CODE_JOURNAL = 100;
     public static final int CODE_JOURNAL_WITH_TIMESDTAMP = 101;
+    public static final int CODE_JOURNAL_ACCOUNT = 102;
+    public static final int CODE_JOURNAL_ACCOUNT_WITH_EMAIL = 103;
 
     private static final UriMatcher sUriMatcher = buildUriMatcher();
     private JournalDbHelper mDbHelper;
 
     /**
-     *implements a uri matcher that compares a uri to CODE_JOURNAL or CODE_JOURNAL_WITH_TIMESDTAMP
-     * @return a uri matcher that distinguishes between CODE_JOURNAL_WITH_TIMESDTAMP and CODE_JOURNAL uris
+     *implements a uri matcher for uri matching
+     * @return a uri matcher that with all codes loaded
      */
     public static UriMatcher buildUriMatcher() {
         final UriMatcher uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
@@ -48,26 +51,73 @@ public class JournalProvider extends ContentProvider{
 
         uriMatcher.addURI(authority, JournalContract.PATH_JOURNAL, CODE_JOURNAL);
         uriMatcher.addURI(authority, JournalContract.PATH_JOURNAL + "/#", CODE_JOURNAL_WITH_TIMESDTAMP);
+        uriMatcher.addURI(authority, JournalContract.PATH_JOURNAL_ACCOUNT, CODE_JOURNAL_ACCOUNT);
+        uriMatcher.addURI(authority, JournalContract.PATH_JOURNAL_ACCOUNT + "/#", CODE_JOURNAL_ACCOUNT_WITH_EMAIL);
 
         return uriMatcher;
     }
 
+    /**
+     * Initialize content provider on startup
+     * @return true if successfully loaded
+     */
     @Override
     public boolean onCreate() {
         mDbHelper = new JournalDbHelper(getContext());
         return true;
     }
 
+    /**
+     *Handles Query requests
+     * @param uri           URI to quey
+     * @param projection    list of columns requested, if null, loads all
+     * @param selection     selection criteria for filter, if null, no filter added
+     * @param selectionArgs values of the filter
+     * @param sortOrder     arrangment of the coursor
+     * @return cursor containing the info
+     */
     @Override
     public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection,
                         @Nullable String[] selectionArgs, @Nullable String sortOrder) {
         Cursor cursor;
 
+        /**
+         * Switch function based on uri passed after comparing it to the predifined uris using the uri matcher
+         */
         switch (sUriMatcher.match(uri)) {
             case CODE_JOURNAL: {
+                String[] selectionParameters = new String[]{LoginActivity.EMAIL_ACCOUNT};
 
                 cursor = mDbHelper.getReadableDatabase().query(
                         JournalContract.JournalEntry.TABLE_NAME,
+                        projection,
+                        JournalContract.JournalEntry.COLUMN_EMAIL + " = ? ",
+                        selectionParameters,
+                        null,
+                        null,
+                        sortOrder);
+
+                break;
+            }
+            case CODE_JOURNAL_WITH_TIMESDTAMP: {
+                String normalizedTimestamp = uri.getLastPathSegment();
+                String[] selectionParameters = new String[]{normalizedTimestamp, LoginActivity.EMAIL_ACCOUNT};
+
+                cursor = mDbHelper.getReadableDatabase().query(
+                        JournalContract.JournalEntry.TABLE_NAME,
+                        projection,
+                        JournalContract.JournalEntry.COLUMN_TIMESTAMP + " = ? "
+                                + " AND " + JournalContract.JournalEntry.COLUMN_EMAIL + " = ? ",
+                        selectionParameters,
+                        null,
+                        null,
+                        sortOrder);
+
+                break;
+            }
+            case CODE_JOURNAL_ACCOUNT: {
+               cursor = mDbHelper.getReadableDatabase().query(
+                        JournalContract.JournalAccount.TABLE_NAME,
                         projection,
                         selection,
                         selectionArgs,
@@ -77,14 +127,14 @@ public class JournalProvider extends ContentProvider{
 
                 break;
             }
-            case CODE_JOURNAL_WITH_TIMESDTAMP: {
-                String normalizedTimestamp = uri.getLastPathSegment();
-                String[] selectionParameters = new String[]{normalizedTimestamp};
+            case CODE_JOURNAL_ACCOUNT_WITH_EMAIL: {
+                String emailAddress = uri.getLastPathSegment();
+                String[] selectionParameters = new String[]{emailAddress};
 
                 cursor = mDbHelper.getReadableDatabase().query(
-                        JournalContract.JournalEntry.TABLE_NAME,
+                        JournalContract.JournalAccount.TABLE_NAME,
                         projection,
-                        JournalContract.JournalEntry.COLUMN_TIMESTAMP + " = ? ",
+                        JournalContract.JournalAccount.COLUMN_EMAIL + " = ? ",
                         selectionParameters,
                         null,
                         null,
@@ -100,18 +150,27 @@ public class JournalProvider extends ContentProvider{
         return cursor;
     }
 
+    /**
+     * funtion not needed hence not implemented
+     */
     @Nullable
     @Override
     public String getType(@NonNull Uri uri) {
         throw new RuntimeException("Methode has yet to be initialized");
     }
 
+    /**
+     * Handles inisertions to the database
+     * @param uri       the uri of the table
+     * @param values    the values to be inserted
+     * @return the uri pointing to the new table entry
+     */
     @Override
     public Uri insert(@NonNull Uri uri, @NonNull ContentValues values) {
         final SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
         switch (sUriMatcher.match(uri)) {
-            case CODE_JOURNAL:
+            case CODE_JOURNAL: {
                 db.beginTransaction();
                 int rowsInserted = 0;
 
@@ -121,7 +180,7 @@ public class JournalProvider extends ContentProvider{
                             null,
                             values);
 
-                    if (_id != -1){
+                    if (_id != -1) {
                         rowsInserted++;
                     }
                     db.setTransactionSuccessful();
@@ -137,11 +196,45 @@ public class JournalProvider extends ContentProvider{
                         .appendPath(Integer.toString(values.getAsInteger(
                                 JournalContract.JournalEntry.COLUMN_TIMESTAMP)))
                         .build();
+            }
+            case CODE_JOURNAL_ACCOUNT: {
+                db.beginTransaction();
+                int rowsInserted = 0;
+
+                try {
+                    long _id = mDbHelper.getWritableDatabase().insert(
+                            JournalContract.JournalAccount.TABLE_NAME,
+                            null,
+                            values);
+
+                    if (_id != -1) {
+                        rowsInserted++;
+                    }
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+
+                if (rowsInserted > 0) {
+                    getContext().getContentResolver().notifyChange(uri, null);
+                }
+
+                return uri.buildUpon()
+                        .appendPath(values.getAsString(JournalContract.JournalAccount.COLUMN_EMAIL))
+                        .build();
+            }
             default:
                 return null;
         }
     }
 
+    /**
+     * Handles deletion from the tables
+     * @param uri           URI poitning to the table entry to be deleted
+     * @param selection     selection criteria for filter, if null, no filter added
+     * @param selectionArgs values of the filter
+     * @return the number of rows deleted
+     */
     @Override
     public int delete(@NonNull Uri uri, @Nullable String selection, @Nullable String[] selectionArgs) {
         int countRowsDeleted;
@@ -159,11 +252,31 @@ public class JournalProvider extends ContentProvider{
             }
             case CODE_JOURNAL_WITH_TIMESDTAMP: {
                 String normalizedTimastamp = uri.getLastPathSegment();
-                String[] selectionParameters = new String[]{normalizedTimastamp};
+                String[] selectionParameters = new String[]{normalizedTimastamp, LoginActivity.EMAIL_ACCOUNT};
 
                 countRowsDeleted = mDbHelper.getWritableDatabase().delete(
                         JournalContract.JournalEntry.TABLE_NAME,
-                        JournalContract.JournalEntry.COLUMN_TIMESTAMP + " = ? ",
+                        JournalContract.JournalEntry.COLUMN_TIMESTAMP + " = ? "
+                                + " AND " + JournalContract.JournalEntry.COLUMN_EMAIL + " = ? ",
+                        selectionParameters);
+
+                break;
+            }
+            case CODE_JOURNAL_ACCOUNT: {
+                countRowsDeleted = mDbHelper.getWritableDatabase().delete(
+                        JournalContract.JournalAccount.TABLE_NAME,
+                        selection,
+                        selectionArgs);
+
+                break;
+            }
+            case CODE_JOURNAL_ACCOUNT_WITH_EMAIL: {
+                String emailAddress = uri.getLastPathSegment();
+                String[] selectionParameters = new String[]{emailAddress};
+
+                countRowsDeleted = mDbHelper.getWritableDatabase().delete(
+                        JournalContract.JournalAccount.TABLE_NAME,
+                        JournalContract.JournalAccount.COLUMN_EMAIL + " = ? ",
                         selectionParameters);
 
                 break;
@@ -179,18 +292,43 @@ public class JournalProvider extends ContentProvider{
         return countRowsDeleted;
     }
 
+    /**
+     * Handled updates to the table
+     * @param uri           URI of the table entry to e changed
+     * @param values        new value
+     * @param selection     selection criteria for filter, if null, no filter added
+     * @param selectionArgs values of the filter
+     * @return number of rows added
+     */
     @Override
     public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection,
                       @Nullable String[] selectionArgs) {
         switch (sUriMatcher.match(uri)) {
             case CODE_JOURNAL_WITH_TIMESDTAMP: {
                 String normalizedTimastamp = uri.getLastPathSegment();
-                String[] selectionParameters = new String[]{normalizedTimastamp};
+                String[] selectionParameters = new String[]{normalizedTimastamp, LoginActivity.EMAIL_ACCOUNT};
 
                 int _id = mDbHelper.getWritableDatabase().update(
                         JournalContract.JournalEntry.TABLE_NAME,
                         values,
-                        JournalContract.JournalEntry.COLUMN_TIMESTAMP + " = ? ",
+                        JournalContract.JournalEntry.COLUMN_TIMESTAMP + " = ? "
+                                + " AND " + JournalContract.JournalEntry.COLUMN_EMAIL + " = ? ",
+                        selectionParameters);
+
+                if (_id > 0) {
+                    getContext().getContentResolver().notifyChange(uri, null);
+                }
+
+                return _id;
+            }
+            case CODE_JOURNAL_ACCOUNT_WITH_EMAIL: {
+                String emailAddress = uri.getLastPathSegment();
+                String[] selectionParameters = new String[]{emailAddress};
+
+                int _id = mDbHelper.getWritableDatabase().update(
+                        JournalContract.JournalAccount.TABLE_NAME,
+                        values,
+                        JournalContract.JournalAccount.COLUMN_EMAIL + " = ? ",
                         selectionParameters);
 
                 if (_id > 0) {
@@ -204,21 +342,53 @@ public class JournalProvider extends ContentProvider{
         }
     }
 
-    public int getCount() {
-        Cursor cursor;
+    /**
+     * Handles counting number of rows
+     * @param uri table URI
+     * @return the number of roes from te chosen table
+     */
+    public int getCount(@NonNull Uri uri) {
+        int count = 0;
 
-        cursor = mDbHelper.getReadableDatabase().query(
-                JournalContract.JournalEntry.TABLE_NAME,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null);
+        switch (sUriMatcher.match(uri)) {
+            case CODE_JOURNAL: {
+                String[] selectionParameters = new String[]{LoginActivity.EMAIL_ACCOUNT};
 
-        int count = cursor.getCount();
+                Cursor cursor;
+                cursor = mDbHelper.getReadableDatabase().query(
+                        JournalContract.JournalEntry.TABLE_NAME,
+                        null,
+                        JournalContract.JournalEntry.COLUMN_EMAIL + " = ? ",
+                        selectionParameters,
+                        null,
+                        null,
+                        null);
 
-        cursor.close();
+                count = cursor.getCount();
+
+                cursor.close();
+
+                break;
+            }
+            case CODE_JOURNAL_ACCOUNT: {
+                Cursor cursor;
+                cursor = mDbHelper.getReadableDatabase().query(
+                        JournalContract.JournalAccount.TABLE_NAME,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null);
+
+                count = cursor.getCount();
+
+                cursor.close();
+                break;
+            }
+            default:
+                throw new UnsupportedOperationException("unable to match URI: " + uri);
+        }
 
         return count;
     }

@@ -9,7 +9,7 @@
 
     <string name="title_insert">Add New Entry</string>
     <string name="title_colour">Colour</string>
-    <string name="title_red">Red</string>
+    <string name="title_pink">Pink</string>
     <string name="title_blue">Blue</string>
     <string name="title_yellow">Yellow</string>
     <string name="title_green">Green</string>
@@ -30,5 +30,39 @@
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."
     </string>
+    <string name="action_logout">logout</string>
+    <string name="msg_failed_login">Unable to login</string>
+    <string name="msg_content_hint">Body</string>
+    <string name="msg_title_hint">Title</string>
+    <string name="action_change_colour">Change Colour</string>
+    <string name="msg_or">OR</string>
+    <string name="msg_email_hint">Email Account</string>
+    <string name="msg_password_hint">Password</string>
+    <string name="msg_login">Login</string>
+    <string name="msg_register">No account yet? Create one</string>
+    <string name="msg_exit">Exit</string>
+    <string name="error_no_email">Please select an account</string>
+    <string name="error_no_password">Please input password</string>
+    <string name="msg_account_details">Account Details</string>
+    <string name="msg_full_name_hint">Enter full name</string>
+    <string name="msg_confirm_password_hint">Confirm Password</string>
+    <string name="btn_back">Back</string>
+    <string name="btn_register">Register</string>
+    <string name="error_no_full_name">Please enter full name</string>
+    <string name="error_password_match">Password does not match</string>
+    <string name="error_taken_email">Email already registered</string>
+    <string name="msg_background_image">Background image</string>
+    <string name="action_lock">Lock</string>
+    <string name="action_share">Share</string>
+    <string name="action_unlock">Unlock</string>
+    <string name="msg_delete">Delete</string>
+    <string name="msg_confirm_deletion">Confirm delete</string>
+    <string name="msg_set">Set</string>
+    <string name="error_passowrd_hint">Please enter valid password</string>
+    <string name="msg_unlock_password">Unlock, Enter password below</string>
+    <string name="msg_lock">Lock, Enter password below</string>
+    <string name="msg_unlock">Unlock</string>
+    <string name="error_cant_send">No application found to share entry</string>
+    <string name="msg_choose_colour">Choose colour</string>
 
 </resources>

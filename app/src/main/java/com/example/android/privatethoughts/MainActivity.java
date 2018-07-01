@@ -16,6 +16,9 @@
 
 package com.example.android.privatethoughts;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -27,48 +30,63 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import com.example.android.privatethoughts.data.JournalContract;
-
-import java.io.File;
+import com.example.android.privatethoughts.utilities.MenuUtils;
 
 /**
  * Main activity with a recyler view containing all the journal entries.
  */
-
 public class MainActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<Cursor>,
         JournalAdapter.JournalAdapterOnClickHandler {
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     public static final String[] MAIN_JOURNAL_PROJECTION = {
             JournalContract.JournalEntry.COLUMN_TITLE,
             JournalContract.JournalEntry.COLUMN_CONTENT,
             JournalContract.JournalEntry.COLUMN_TIMESTAMP,
-            JournalContract.JournalEntry.COLUMN_COLOUR
+            JournalContract.JournalEntry.COLUMN_COLOUR,
+            JournalContract.JournalEntry.COLUMN_EMAIL,
+            JournalContract.JournalEntry.COLUMN_PASSWORD
     };
 
     public static final int INDEX_JOURNAL_TITLE = 0;
     public static final int INDEX_JOURNAL_CONTENT = 1;
     public static final int INDEX_JOURNAL_TIMESTAMP = 2;
     public static final int INDEX_JOURNAL_COLOUR = 3;
+    public static final int INDEX_JOURNAL_EMAIL = 4;
+    public static final int INDEX_JOURNAL_PASSWORD = 5;
 
     public static final int ID_JOURNAL_LOADER = 11;
 
-    private JournalAdapter mJournalAdapter;
-    private RecyclerView mRecyclerView;
-    private int mPosition = RecyclerView.NO_POSITION;
+    public static final String INDEX_PROTECTED = "protected";
 
+    private JournalAdapter mJournalAdapter;
+    private FrameLayout mFrameLayout;
+    private RecyclerView mRecyclerView;
     private ProgressBar mLoaderIndicator;
     private FloatingActionButton mButtonAddJournalEntry;
+    private int mPosition = RecyclerView.NO_POSITION;
 
+    /**
+     * Implements the activity and its views
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mFrameLayout = findViewById(R.id.frame_activity_main);
         mButtonAddJournalEntry = findViewById(R.id.button_add_journal_entry);
         mRecyclerView = findViewById(R.id.recycler_view_journal);
         mLoaderIndicator = findViewById(R.id.pb_load_indicator);
@@ -96,6 +114,47 @@ public class MainActivity extends AppCompatActivity implements
         getSupportLoaderManager().initLoader(ID_JOURNAL_LOADER, null, this);
     }
 
+    /**
+     * Initializ the action bar menu
+     * @param menu to be initialized
+     * @return tru when initialized
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater menuInflater = getMenuInflater();
+
+        menuInflater.inflate(R.menu.activity_main, menu);
+
+        return true;
+    }
+
+    /**
+     * Defines action to be taken when a menu item is clicked
+     * @param item the menu item clicked
+     * @return true after action is perfomed
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.action_logout) {
+            MenuUtils.logoutAction(this);
+
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+            finish();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * Creats loader and performs cursor loading from databse
+     * @param id    of the loader
+     * @param args  arguments passed
+     * @return cursor with data from database
+     */
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         switch (id) {
@@ -116,8 +175,15 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    /**
+     * Defines action to be taken after loader creation is finished. sets the fields if the information exists
+     * @param loader that has performed teh action
+     * @param data information recieved;
+     */
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        getSupportActionBar().setTitle(getString(R.string.app_name) + " (" + data.getCount() + ")");
+
         mJournalAdapter.swapCursor(data);
 
         if (mPosition == RecyclerView.NO_POSITION) mPosition = 0;
@@ -128,21 +194,67 @@ public class MainActivity extends AppCompatActivity implements
             showJournalEntries();
         } else {
             hideLoading();
-            Toast.makeText(this, "Nothing to show", Toast.LENGTH_LONG).show();
         }
     }
 
+    /**
+     * Defines action to be taken when the loader is reset
+     * @param loader that has been executed
+     */
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         mJournalAdapter.swapCursor(null);
     }
 
+    /**
+     * On click listener for recycler view item
+     * @param timestamp the time of the entry
+     * @param password the password if any
+     */
     @Override
-    public void onClick(long timestamp) {
-        Intent intent = new Intent(MainActivity.this, InsertActivity.class);
-        Uri uriForTimestampQuery = JournalContract.JournalEntry.buildWeatherUriWithTimestamp(timestamp);
+    public void onClick(long timestamp, final String password) {
+        final Intent intent = new Intent(MainActivity.this, InsertActivity.class);
+        Uri uriForTimestampQuery = JournalContract.JournalEntry.buildJournalUriWithTimestamp(timestamp);
         intent.setData(uriForTimestampQuery);
-        startActivity(intent);
+
+        if (password != null && !(password.isEmpty())) {
+            intent.putExtra(INDEX_PROTECTED, true);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            LayoutInflater layoutInflater = this.getLayoutInflater();
+            View dialogLayout = layoutInflater.inflate(R.layout.dialog_set_password, null);
+            final EditText mPasswordEdit = dialogLayout.findViewById(R.id.edit_entry_password);
+
+            builder.setView(dialogLayout)
+                    .setTitle(getString(R.string.msg_unlock_password))
+                    .setPositiveButton(R.string.msg_unlock, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            String passwordEdit = mPasswordEdit.getText().toString();
+
+                            if (passwordEdit != null && !(passwordEdit.isEmpty())) {
+                                if (password.matches(passwordEdit)) {
+                                    startActivity(intent);
+                                } else {
+                                    showSnackbar(getString(R.string.error_incorrect_password));
+                                }
+                            } else {
+                                showSnackbar(getString(R.string.error_incorrect_password));
+                            }
+                        }
+                    })
+                    .setNegativeButton(R.string.msg_exit, null)
+                    .show();
+        } else {
+            startActivity(intent);
+        }
+    }
+
+    /**
+     * Show snack bar
+     * @param message to shown
+     */
+    private void showSnackbar(String message) {
+        Snackbar.make(mFrameLayout, message, Snackbar.LENGTH_LONG).show();
     }
 
     /**

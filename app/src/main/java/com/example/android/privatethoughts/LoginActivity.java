@@ -16,351 +16,433 @@
 
 package com.example.android.privatethoughts;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.annotation.TargetApi;
-import android.content.pm.PackageManager;
-import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
-import android.app.LoaderManager.LoaderCallbacks;
-
-import android.content.CursorLoader;
-import android.content.Loader;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
-
-import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
+import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.provider.ContactsContract;
-import android.text.TextUtils;
-import android.view.KeyEvent;
+import android.util.Log;
 import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.inputmethod.EditorInfo;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.example.android.privatethoughts.data.JournalContract;
+import com.example.android.privatethoughts.utilities.VerificationTransformationUtils;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.SignInButton;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GoogleAuthProvider;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static android.Manifest.permission.READ_CONTACTS;
-
 /**
- * A login screen that offers login via email/password.
+ *activity for google authentication
  */
-public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor> {
+public class LoginActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
+    private static final String TAG = LoginActivity.class.getSimpleName();
 
-    /**
-     * Id to identity READ_CONTACTS permission request.
-     */
-    private static final int REQUEST_READ_CONTACTS = 0;
-
-    /**
-     * A dummy authentication store containing known user names and passwords.
-     * TODO: remove after connecting to a real authentication system.
-     */
-    private static final String[] DUMMY_CREDENTIALS = new String[]{
-            "foo@example.com:hello", "bar@example.com:world"
+    public static final String[] MAIN_JOURNAL_ACCOUNT_PROJECTION = {
+            JournalContract.JournalAccount.COLUMN_EMAIL,
+            JournalContract.JournalAccount.COLUMN_PASSWORD,
+            JournalContract.JournalAccount.COLUMN_USERNAME
     };
+
+    public static final int INDEX_JOURNAL_ACCOUNT_EMAIL = 0;
+    public static final int INDEX_JOURNAL_ACCOUNT_PASSWORD = 1;
+    public static final int INDEX_JOURNAL_ACCOUNT_USERNAME = 2;
+
+    public static final int ID_JOURNAL_ACCOUNT_LOADER = 33;
+
+    public static final int DEFAULT_PASSWORD = 1234;
+
+    private Cursor mCursor;
+
+    private FirebaseAuth mFirebaseAuth;
+
+    private static final int RC_SIGN_IN = 11;
+    private GoogleSignInClient mGoogleSignInClient;
+
+    private SignInButton mSignInButton;
+    private ProgressBar mLoaderIndicatorSignIn, mLoaderIndicatorAccount;
+    private ProgressDialog mProgressDialog;
+    private TextView mRegistrationButton, mLoginButton, mExitButton;
+    private EditText mPassword;
+    private AutoCompleteTextView mEmailAddress;
+
+    public static final String MY_PREFRENCES = "my_prefrences";
+    public static final String EMAIL_KEY = "email_key";
+    public static final String PASSWORD_KEY = "password_key";
+    private SharedPreferences mSharedPreferences;
+
+    public static String EMAIL_ACCOUNT;
+
     /**
-     * Keep track of the login task to ensure we can cancel it if requested.
+     * Activity to define the log in process
+     * @param savedInstanceState
      */
-    private UserLoginTask mAuthTask = null;
-
-    // UI references.
-    private AutoCompleteTextView mEmailView;
-    private EditText mPasswordView;
-    private View mProgressView;
-    private View mLoginFormView;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        // Set up the login form.
-        mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
-        populateAutoComplete();
 
-        mPasswordView = (EditText) findViewById(R.id.password);
-        mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+        mLoaderIndicatorSignIn = findViewById(R.id.pb_load_indicator_sign_in);
+        mLoaderIndicatorAccount = findViewById(R.id.pb_load_indicator_account_names);
+        mEmailAddress = findViewById(R.id.textview_email);
+        mPassword = findViewById(R.id.edit_password);
+        mRegistrationButton = findViewById(R.id.textview_register);
+        mLoginButton = findViewById(R.id.btn_login);
+        mExitButton = findViewById(R.id.btn_exit);
+        mSignInButton = findViewById(R.id.sign_in_button);
+
+        mLoginButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-                if (id == EditorInfo.IME_ACTION_DONE || id == EditorInfo.IME_NULL) {
-                    attemptLogin();
-                    return true;
+            public void onClick(View v) {
+                if(valid()) {
+                    setEmailAccount(mEmailAddress.getText().toString());
+                    editSharedPrefrences(mEmailAddress.getText().toString());
+                    signIn();
                 }
-                return false;
             }
         });
 
-        Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
-        mEmailSignInButton.setOnClickListener(new OnClickListener() {
+        mRegistrationButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                attemptLogin();
-            }
-        });
-
-        mLoginFormView = findViewById(R.id.login_form);
-        mProgressView = findViewById(R.id.login_progress);
-    }
-
-    private void populateAutoComplete() {
-        if (!mayRequestContacts()) {
-            return;
-        }
-
-        getLoaderManager().initLoader(0, null, this);
-    }
-
-    private boolean mayRequestContacts() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            return true;
-        }
-        if (checkSelfPermission(READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
-            return true;
-        }
-        if (shouldShowRequestPermissionRationale(READ_CONTACTS)) {
-            Snackbar.make(mEmailView, R.string.permission_rationale, Snackbar.LENGTH_INDEFINITE)
-                    .setAction(android.R.string.ok, new View.OnClickListener() {
-                        @Override
-                        @TargetApi(Build.VERSION_CODES.M)
-                        public void onClick(View v) {
-                            requestPermissions(new String[]{READ_CONTACTS}, REQUEST_READ_CONTACTS);
-                        }
-                    });
-        } else {
-            requestPermissions(new String[]{READ_CONTACTS}, REQUEST_READ_CONTACTS);
-        }
-        return false;
-    }
-
-    /**
-     * Callback received when a permissions request has been completed.
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        if (requestCode == REQUEST_READ_CONTACTS) {
-            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                populateAutoComplete();
-            }
-        }
-    }
-
-
-    /**
-     * Attempts to sign in or register the account specified by the login form.
-     * If there are form errors (invalid email, missing fields, etc.), the
-     * errors are presented and no actual login attempt is made.
-     */
-    private void attemptLogin() {
-        if (mAuthTask != null) {
-            return;
-        }
-
-        // Reset errors.
-        mEmailView.setError(null);
-        mPasswordView.setError(null);
-
-        // Store values at the time of the login attempt.
-        String email = mEmailView.getText().toString();
-        String password = mPasswordView.getText().toString();
-
-        boolean cancel = false;
-        View focusView = null;
-
-        // Check for a valid password, if the user entered one.
-        if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
-            mPasswordView.setError(getString(R.string.error_invalid_password));
-            focusView = mPasswordView;
-            cancel = true;
-        }
-
-        // Check for a valid email address.
-        if (TextUtils.isEmpty(email)) {
-            mEmailView.setError(getString(R.string.error_field_required));
-            focusView = mEmailView;
-            cancel = true;
-        } else if (!isEmailValid(email)) {
-            mEmailView.setError(getString(R.string.error_invalid_email));
-            focusView = mEmailView;
-            cancel = true;
-        }
-
-        if (cancel) {
-            // There was an error; don't attempt login and focus the first
-            // form field with an error.
-            focusView.requestFocus();
-        } else {
-            // Show a progress spinner, and kick off a background task to
-            // perform the user login attempt.
-            showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
-            mAuthTask.execute((Void) null);
-        }
-    }
-
-    private boolean isEmailValid(String email) {
-        //TODO: Replace this with your own logic
-        return email.contains("@");
-    }
-
-    private boolean isPasswordValid(String password) {
-        //TODO: Replace this with your own logic
-        return password.length() > 4;
-    }
-
-    /**
-     * Shows the progress UI and hides the login form.
-     */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
-    private void showProgress(final boolean show) {
-        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
-        // for very easy animations. If available, use these APIs to fade-in
-        // the progress spinner.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
-
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-            mLoginFormView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-                }
-            });
-
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mProgressView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-                }
-            });
-        } else {
-            // The ViewPropertyAnimator APIs are not available, so simply show
-            // and hide the relevant UI components.
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-        }
-    }
-
-    @Override
-    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-        return new CursorLoader(this,
-                // Retrieve data rows for the device user's 'profile' contact.
-                Uri.withAppendedPath(ContactsContract.Profile.CONTENT_URI,
-                        ContactsContract.Contacts.Data.CONTENT_DIRECTORY), ProfileQuery.PROJECTION,
-
-                // Select only email addresses.
-                ContactsContract.Contacts.Data.MIMETYPE +
-                        " = ?", new String[]{ContactsContract.CommonDataKinds.Email
-                .CONTENT_ITEM_TYPE},
-
-                // Show primary email addresses first. Note that there won't be
-                // a primary email address if the user hasn't specified one.
-                ContactsContract.Contacts.Data.IS_PRIMARY + " DESC");
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
-        List<String> emails = new ArrayList<>();
-        cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {
-            emails.add(cursor.getString(ProfileQuery.ADDRESS));
-            cursor.moveToNext();
-        }
-
-        addEmailsToAutoComplete(emails);
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> cursorLoader) {
-
-    }
-
-    private void addEmailsToAutoComplete(List<String> emailAddressCollection) {
-        //Create adapter to tell the AutoCompleteTextView what to show in its dropdown list.
-        ArrayAdapter<String> adapter =
-                new ArrayAdapter<>(LoginActivity.this,
-                        android.R.layout.simple_dropdown_item_1line, emailAddressCollection);
-
-        mEmailView.setAdapter(adapter);
-    }
-
-
-    private interface ProfileQuery {
-        String[] PROJECTION = {
-                ContactsContract.CommonDataKinds.Email.ADDRESS,
-                ContactsContract.CommonDataKinds.Email.IS_PRIMARY,
-        };
-
-        int ADDRESS = 0;
-        int IS_PRIMARY = 1;
-    }
-
-    /**
-     * Represents an asynchronous login/registration task used to authenticate
-     * the user.
-     */
-    public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
-
-        private final String mEmail;
-        private final String mPassword;
-
-        UserLoginTask(String email, String password) {
-            mEmail = email;
-            mPassword = password;
-        }
-
-        @Override
-        protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
-
-            try {
-                // Simulate network access.
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                return false;
-            }
-
-            for (String credential : DUMMY_CREDENTIALS) {
-                String[] pieces = credential.split(":");
-                if (pieces[0].equals(mEmail)) {
-                    // Account exists, return true if the password matches.
-                    return pieces[1].equals(mPassword);
-                }
-            }
-
-            // TODO: register the new account here.
-            return true;
-        }
-
-        @Override
-        protected void onPostExecute(final Boolean success) {
-            mAuthTask = null;
-            showProgress(false);
-
-            if (success) {
+            public void onClick(View v) {
+                Intent intent = new Intent(LoginActivity.this, RegistrationActivity.class);
+                startActivity(intent);
                 finish();
-            } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
-                mPasswordView.requestFocus();
+            }
+        });
+
+        mExitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
+
+        mSignInButton.setSize(SignInButton.SIZE_WIDE);
+
+        mSignInButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent googleSignInIntent = mGoogleSignInClient.getSignInIntent();
+                startActivityForResult(googleSignInIntent, RC_SIGN_IN);
+
+                showLoading();
+            }
+        });
+
+        mProgressDialog = new ProgressDialog(LoginActivity.this,
+                R.style.AppTheme_Dark_Dialog);
+        mProgressDialog.setIndeterminate(true);
+        mProgressDialog.setMessage("Authenticating...");
+
+        FirebaseApp.initializeApp(this);
+        mFirebaseAuth = FirebaseAuth.getInstance();
+
+        GoogleSignInOptions googleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+
+        mGoogleSignInClient = GoogleSignIn.getClient(this, googleSignInOptions);
+
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+
+        mSharedPreferences = this.getSharedPreferences(LoginActivity.MY_PREFRENCES, Context.MODE_PRIVATE);
+
+        String email = mSharedPreferences.getString(EMAIL_KEY, null);
+
+        if (account != null) {
+            setEmailAccount(account.getEmail());
+            editSharedPrefrences(account.getEmail());
+            firebaseAuthWithGoogle(account);
+        } else if (email != null && !email.isEmpty()) {
+            setEmailAccount(email);
+            editSharedPrefrences(email);
+            signIn();
+        } else {
+            getSupportLoaderManager().initLoader(ID_JOURNAL_ACCOUNT_LOADER, null, this);
+        }
+    }
+
+    /**
+     * Validates the information before log in
+     * @return trur if information is valid, false otherwise
+     */
+    private boolean valid() {
+        boolean valid = true;
+
+        String email = mEmailAddress.getText().toString();
+        String password = mPassword.getText().toString();
+
+        if (email.isEmpty()) {
+            mEmailAddress.setError(getString(R.string.error_no_email));
+            valid = false;
+        } else if(!VerificationTransformationUtils.checkEmail(email)) {
+            mEmailAddress.setError(getString(R.string.error_invalid_email));
+            valid = false;
+        }
+
+        if (password.isEmpty()) {
+            mPassword.setError(getString(R.string.error_no_password));
+            valid = false;
+        } else {
+            if (mCursor != null && mCursor.getCount() > 0) {
+                mCursor.moveToFirst();
+
+                do {
+                    if (mCursor.getString(INDEX_JOURNAL_ACCOUNT_EMAIL).matches(email)) {
+                        if (Integer.parseInt(password) != mCursor.getInt(INDEX_JOURNAL_ACCOUNT_PASSWORD)) {
+                            mPassword.setError(getString(R.string.error_incorrect_password));
+                            valid = false;
+                            break;
+                        }
+                    }
+                } while (mCursor.moveToNext());
             }
         }
 
-        @Override
-        protected void onCancelled() {
-            mAuthTask = null;
-            showProgress(false);
+        return valid;
+    }
+
+    /**
+     * Defines actions to be performed when the acticity starts. Check if a google account is already logged in
+     */
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        FirebaseUser firebaseUser = mFirebaseAuth.getCurrentUser();
+        googleSignIn(firebaseUser);
+    }
+
+    /**
+     * Signs in a google account
+     * @param account to be signed in
+     */
+    private void googleSignIn(FirebaseUser account) {
+        if (account != null) {
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
+            finish();
         }
+    }
+
+    /**
+     * Signs in if not a google account
+     */
+    private void signIn() {
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
+    /**
+     * Defines actions to be performed when
+     * @param requestCode code of the request
+     * @param resultCode code showing the success of te request
+     * @param data intent that was passed
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        showProgressDialog();
+
+        if (requestCode == RC_SIGN_IN) {
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            handleSignInResult(task);
+        }
+    }
+
+    /**
+     * Attempts to sign in a google account
+     * @param task action to be perfomed
+     */
+    private void handleSignInResult(Task<GoogleSignInAccount> task) {
+        try {
+            GoogleSignInAccount googleAccount = task.getResult(ApiException.class);
+            setEmailAccount(googleAccount.getEmail());
+            editSharedPrefrences(googleAccount.getEmail());
+            firebaseAuthWithGoogle(googleAccount);
+        } catch (ApiException e) {
+            Log.w(TAG, "Sign in failed code = " + e.getStatusCode());
+            googleSignIn(null);
+        }
+    }
+
+    /**
+     * Checks credentials of account
+     * @param googleSignInAccount account signed in
+     */
+    private void firebaseAuthWithGoogle(GoogleSignInAccount googleSignInAccount) {
+        AuthCredential authCredential = GoogleAuthProvider.getCredential(googleSignInAccount.getIdToken(), null);
+
+        mFirebaseAuth.signInWithCredential(authCredential)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            FirebaseUser firebaseUser = mFirebaseAuth.getCurrentUser();
+                            googleSignIn(firebaseUser);
+                        } else {
+                            showSignInButton();
+                            Toast.makeText(LoginActivity.this, getString(R.string.msg_failed_login), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+    }
+
+    /**
+     * Edits the shared prefrences
+     * @param emailAccount email account signed in
+     */
+    private void editSharedPrefrences(String emailAccount){
+        mSharedPreferences = getSharedPreferences(MY_PREFRENCES, Context.MODE_PRIVATE);
+
+        SharedPreferences.Editor editor = mSharedPreferences.edit();
+
+        editor.putString(EMAIL_KEY, emailAccount);
+        editor.putInt(PASSWORD_KEY, DEFAULT_PASSWORD);
+        editor.apply();
+    }
+
+    /**
+     * sets teh email account of the signed in user
+     * @param emailAccount email account
+     */
+    private void setEmailAccount(String emailAccount){
+        EMAIL_ACCOUNT = VerificationTransformationUtils.getEmailString(emailAccount);
+    }
+
+    /**
+     * hide the recycler view and show the progress bar
+     */
+    private void showLoading(){
+        mLoaderIndicatorSignIn.setVisibility(View.VISIBLE);
+        mSignInButton.setVisibility(View.GONE);
+    }
+
+    /**
+     * hide the progress bar, dismiss progress dialogand show the sign in buttob
+     */
+    private void showSignInButton(){
+        mLoaderIndicatorSignIn.setVisibility(View.GONE);
+        mSignInButton.setVisibility(View.VISIBLE);
+        mProgressDialog.dismiss();
+    }
+
+    /**
+     * hide the progress bar, show progress dialog and show the sign in buttob
+     */
+    private void showProgressDialog() {
+        mLoaderIndicatorSignIn.setVisibility(View.GONE);
+        mSignInButton.setVisibility(View.VISIBLE);
+        mProgressDialog.show();
+    }
+
+    /**
+     * hide the progress bar and show email view
+     */
+    private void showEmailView() {
+        mLoaderIndicatorAccount.setVisibility(View.GONE);
+        mEmailAddress.setVisibility(View.VISIBLE);
+        mEmailAddress.requestFocus();
+    }
+
+    /**
+     * Creats loader and performed cursor loading from databse
+     * @param id    of the loader
+     * @param args  arguments passed
+     * @return cursor with data from database
+     */
+    @NonNull
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, @Nullable Bundle args) {
+        switch (id) {
+            case ID_JOURNAL_ACCOUNT_LOADER:
+                Uri journalQueryUri = JournalContract.JournalAccount.CONTENT_URI;
+
+                return new CursorLoader(this,
+                        journalQueryUri,
+                        MAIN_JOURNAL_ACCOUNT_PROJECTION,
+                        null,
+                        null,
+                        null);
+
+            default:
+                throw new RuntimeException("Loader ID not found; " + id);
+        }
+    }
+
+    /**
+     * Defines action to be taken after loader creation is finished. sets the fields if the information exists
+     * @param loader that has performed teh action
+     * @param data information recieved;
+     */
+    @Override
+    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
+        mCursor = data;
+
+        List<String> emailAccountList = new ArrayList<>();
+
+        if (data != null && data.getCount() > 0) {
+            data.moveToFirst();
+
+            do {
+                emailAccountList.add(data.getString(INDEX_JOURNAL_ACCOUNT_EMAIL));
+            } while (data.moveToNext());
+        }
+
+        String[] emailAccountArray = emailAccountList.toArray(new String[emailAccountList.size()]);
+
+        ArrayAdapter<String> arrayAdapter =
+                new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, emailAccountArray);
+
+        mEmailAddress.setThreshold(1);
+        mEmailAddress.setAdapter(arrayAdapter);
+
+        mEmailAddress.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                mPassword.requestFocus();
+            }
+        });
+
+        showEmailView();
+    }
+
+    /**
+     * Defines action to be taken when the loader is reset
+     * @param loader that has been executed
+     */
+    @Override
+    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
+
     }
 }
-

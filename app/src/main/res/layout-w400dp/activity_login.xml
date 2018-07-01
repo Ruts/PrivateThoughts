@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true">
@@ -8,7 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"
-        android:contentDescription="@string/msg_background_image"
+        android:contentDescription="back_ground_image"
         android:src="@drawable/img_login_background"
         android:scaleType="centerCrop"
         android:alpha="0.2"/>
@@ -20,7 +21,7 @@
 
         <LinearLayout
             android:orientation="vertical"
-            android:layout_width="match_parent"
+            android:layout_width="@dimen/layout_max_width"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:paddingTop="@dimen/padding_top_login_activity"
@@ -78,15 +79,14 @@
                 android:id="@+id/btn_login"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginBottom="@dimen/activity_horizontal_margin"
                 android:layout_marginTop="@dimen/activity_horizontal_margin"
+                android:layout_marginBottom="@dimen/activity_horizontal_margin"
                 android:background="@drawable/see_through_button"
-                android:gravity="center"
                 android:padding="12dp"
                 android:text="@string/msg_login"
                 android:textColor="@android:color/black"
-                android:textSize="@dimen/activity_font_size_group" />
+                android:textSize="@dimen/activity_font_size_group"
+                android:layout_gravity="center"/>
 
             <TextView
                 android:id="@+id/textview_register"
@@ -100,7 +100,7 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
+                android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center"
                 android:layout_weight="5">
@@ -145,6 +145,7 @@
                 android:fontFamily="sans-serif-medium"
                 android:textStyle="normal"
                 android:textColor="@color/colorAccent"
+                android:letterSpacing="0.02"
                 android:layout_gravity="center"
                 android:text="@string/msg_exit"
                 android:id="@+id/btn_exit" />
