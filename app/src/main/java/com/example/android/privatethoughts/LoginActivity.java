@@ -63,8 +63,8 @@ import java.util.List;
  *activity for google authentication
  */
 
-public class GoogleLoginActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
-    private static final String TAG = GoogleLoginActivity.class.getSimpleName();
+public class LoginActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
+    private static final String TAG = LoginActivity.class.getSimpleName();
 
     public static final String[] MAIN_JOURNAL_ACCOUNT_PROJECTION = {
             JournalContract.JournalAccount.COLUMN_EMAIL,
@@ -104,7 +104,7 @@ public class GoogleLoginActivity extends AppCompatActivity implements LoaderMana
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_google_login);
+        setContentView(R.layout.activity_login);
 
         mLoaderIndicatorSignIn = findViewById(R.id.pb_load_indicator_sign_in);
         mLoaderIndicatorAccount = findViewById(R.id.pb_load_indicator_account_names);
@@ -129,7 +129,7 @@ public class GoogleLoginActivity extends AppCompatActivity implements LoaderMana
         mRegistrationButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(GoogleLoginActivity.this, RegistrationActivity.class);
+                Intent intent = new Intent(LoginActivity.this, RegistrationActivity.class);
                 startActivity(intent);
                 finish();
             }
@@ -154,7 +154,7 @@ public class GoogleLoginActivity extends AppCompatActivity implements LoaderMana
             }
         });
 
-        mProgressDialog = new ProgressDialog(GoogleLoginActivity.this,
+        mProgressDialog = new ProgressDialog(LoginActivity.this,
                 R.style.AppTheme_Dark_Dialog);
         mProgressDialog.setIndeterminate(true);
         mProgressDialog.setMessage("Authenticating...");
@@ -171,7 +171,7 @@ public class GoogleLoginActivity extends AppCompatActivity implements LoaderMana
 
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
 
-        mSharedPreferences = this.getSharedPreferences(GoogleLoginActivity.MY_PREFRENCES, Context.MODE_PRIVATE);
+        mSharedPreferences = this.getSharedPreferences(LoginActivity.MY_PREFRENCES, Context.MODE_PRIVATE);
 
         String email = mSharedPreferences.getString(EMAIL_KEY, null);
 
@@ -281,7 +281,7 @@ public class GoogleLoginActivity extends AppCompatActivity implements LoaderMana
                             googleSignIn(firebaseUser);
                         } else {
                             showSignInButton();
-                            Toast.makeText(GoogleLoginActivity.this, getString(R.string.msg_failed_login), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(LoginActivity.this, getString(R.string.msg_failed_login), Toast.LENGTH_SHORT).show();
                         }
                     }
                 });

@@ -16,4 +16,5 @@
     <dimen name="text_size_exit">15sp</dimen>
     <dimen name="image_size_logo">80dp</dimen>
     <dimen name="button_padding">5dp</dimen>
+    <dimen name="padding_imsge">4dp</dimen>
 </resources>

@@ -25,7 +25,7 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.example.android.privatethoughts.GoogleLoginActivity;
+import com.example.android.privatethoughts.LoginActivity;
 
 /**
  * this class is th content provider for the Private Thoughts app.
@@ -71,7 +71,7 @@ public class JournalProvider extends ContentProvider{
 
         switch (sUriMatcher.match(uri)) {
             case CODE_JOURNAL: {
-                String[] selectionParameters = new String[]{GoogleLoginActivity.EMAIL_ACCOUNT};
+                String[] selectionParameters = new String[]{LoginActivity.EMAIL_ACCOUNT};
 
                 cursor = mDbHelper.getReadableDatabase().query(
                         JournalContract.JournalEntry.TABLE_NAME,
@@ -86,7 +86,7 @@ public class JournalProvider extends ContentProvider{
             }
             case CODE_JOURNAL_WITH_TIMESDTAMP: {
                 String normalizedTimestamp = uri.getLastPathSegment();
-                String[] selectionParameters = new String[]{normalizedTimestamp, GoogleLoginActivity.EMAIL_ACCOUNT};
+                String[] selectionParameters = new String[]{normalizedTimestamp, LoginActivity.EMAIL_ACCOUNT};
 
                 cursor = mDbHelper.getReadableDatabase().query(
                         JournalContract.JournalEntry.TABLE_NAME,
@@ -221,7 +221,7 @@ public class JournalProvider extends ContentProvider{
             }
             case CODE_JOURNAL_WITH_TIMESDTAMP: {
                 String normalizedTimastamp = uri.getLastPathSegment();
-                String[] selectionParameters = new String[]{normalizedTimastamp, GoogleLoginActivity.EMAIL_ACCOUNT};
+                String[] selectionParameters = new String[]{normalizedTimastamp, LoginActivity.EMAIL_ACCOUNT};
 
                 countRowsDeleted = mDbHelper.getWritableDatabase().delete(
                         JournalContract.JournalEntry.TABLE_NAME,
@@ -267,7 +267,7 @@ public class JournalProvider extends ContentProvider{
         switch (sUriMatcher.match(uri)) {
             case CODE_JOURNAL_WITH_TIMESDTAMP: {
                 String normalizedTimastamp = uri.getLastPathSegment();
-                String[] selectionParameters = new String[]{normalizedTimastamp, GoogleLoginActivity.EMAIL_ACCOUNT};
+                String[] selectionParameters = new String[]{normalizedTimastamp, LoginActivity.EMAIL_ACCOUNT};
 
                 int _id = mDbHelper.getWritableDatabase().update(
                         JournalContract.JournalEntry.TABLE_NAME,
@@ -308,7 +308,7 @@ public class JournalProvider extends ContentProvider{
 
         switch (sUriMatcher.match(uri)) {
             case CODE_JOURNAL: {
-                String[] selectionParameters = new String[]{GoogleLoginActivity.EMAIL_ACCOUNT};
+                String[] selectionParameters = new String[]{LoginActivity.EMAIL_ACCOUNT};
 
                 Cursor cursor;
                 cursor = mDbHelper.getReadableDatabase().query(

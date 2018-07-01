@@ -16,11 +16,14 @@
 
 package com.example.android.privatethoughts;
 
+import android.app.AlertDialog;
 import android.content.ContentValues;
-import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.LoaderManager;
+import android.support.v4.app.ShareCompat;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.database.Cursor;
@@ -28,19 +31,20 @@ import android.databinding.DataBindingUtil;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.EditText;
 
 import com.example.android.privatethoughts.data.JournalContract;
 import com.example.android.privatethoughts.databinding.ActivityInsertBinding;
+import com.example.android.privatethoughts.utilities.MenuUtils;
 import com.example.android.privatethoughts.utilities.TableEventsUtils;
 import com.example.android.privatethoughts.utilities.TableTaskParams;
 import com.example.android.privatethoughts.utilities.JournalColourUtils;
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.firebase.auth.FirebaseAuth;
+import com.google.android.gms.common.util.ArrayUtils;
 
 /**
  * activity to display a single journal entry and allows for editing
@@ -48,19 +52,21 @@ import com.google.firebase.auth.FirebaseAuth;
 
 public class InsertActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
     private static final int ID_DETAIL_JOURNAL = 22;
+    private static final String JOURNAL_SHARE_HASHTAG = " #PrivateThoughts";
 
     private Uri mUri;
 
-    private ActivityInsertBinding mActivityInsertBinding;
+    private Cursor mCursor;
 
-    private GoogleSignInClient mGoogleSignInClient;
+    private ActivityInsertBinding mActivityInsertBinding;
 
     private boolean mNewEntry = true;
 
-    public static final String TITLE_INDEX = "title";
-    public static final String CONTENT_INDEX = "content";
-    public static final String COLOUR_INDEX = "colour";
     public String viewColour = "default";
+    public static String setPassword = "";
+    private String mPassword = "";
+
+    private MenuItem mLock, mUnlock;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,28 +76,11 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
 
         mActivityInsertBinding = DataBindingUtil.setContentView(this, R.layout.activity_insert);
 
-        if (getIntent().hasExtra(COLOUR_INDEX)) {
-            setFieldsFromIntent();
-            if (getIntent().getData() != null) {
-                mUri = getIntent().getData();
-                mNewEntry = false;
-            }
-        } else if (getIntent().getData() != null) {
+        if (getIntent().getData() != null) {
             mUri = getIntent().getData();
             mNewEntry = false;
             getSupportLoaderManager().initLoader(ID_DETAIL_JOURNAL, null, this);
         }
-
-        mActivityInsertBinding.constraintLayoutView
-                .setBackgroundColor(JournalColourUtils.getColourResource(this, viewColour));
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        mActivityInsertBinding.constraintLayoutView
-                .setBackgroundColor(JournalColourUtils.getColourResource(this, viewColour));
     }
 
     @Override
@@ -109,12 +98,27 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
 
         menuInflater.inflate(R.menu.activity_insert, menu);
 
+        mLock = menu.findItem(R.id.action_lock);
+        mUnlock = menu.findItem(R.id.action_unlock);
+
+        if (getIntent().hasExtra(MainActivity.INDEX_PROTECTED)
+                && getIntent().getExtras().getBoolean(MainActivity.INDEX_PROTECTED)) {
+            showUnlockMenuItem();
+        } else {
+            showLockMenuItem();
+        }
+
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
+
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater layoutInflater = this.getLayoutInflater();
+        View dialogLayout = layoutInflater.inflate(R.layout.dialog_set_password, null);
+        final EditText mPasswordEdit = dialogLayout.findViewById(R.id.edit_entry_password);
 
         if (id == android.R.id.home) {
             onBackPressed();
@@ -126,24 +130,154 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
                 onInsert();
             }
             finish();
+            return true;
+        }
+
+        if (id == R.id.action_lock) {
+            builder.setView(dialogLayout)
+                    .setTitle(getString(R.string.msg_lock))
+                    .setPositiveButton(R.string.msg_set, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            String password = mPasswordEdit.getText().toString();
+
+                            if (password != null && !(password.isEmpty())) {
+                                mPassword = password;
+                                showUnlockMenuItem();
+                            } else {
+                                showSnackbar(getString(R.string.error_passowrd_hint));
+                            }
+                        }
+                    })
+                    .setNegativeButton(R.string.msg_exit, null)
+                    .show();
+            return true;
+        }
+
+        if (id == R.id.action_unlock) {
+            builder.setView(dialogLayout)
+                    .setTitle(getString(R.string.msg_unlock_password))
+                    .setPositiveButton(R.string.msg_set, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            String password = mPasswordEdit.getText().toString();
+
+                            if (password != null && !(password.isEmpty())) {
+                                if (password.matches(mCursor.getString(MainActivity.INDEX_JOURNAL_PASSWORD))
+                                        || password.matches(mPassword)) {
+                                    mPassword = "";
+                                    showLockMenuItem();
+                                } else {
+                                    showSnackbar(getString(R.string.error_incorrect_password));
+                                }
+                            } else {
+                                showSnackbar(getString(R.string.error_incorrect_password));
+                            }
+                        }
+                    })
+                    .setNegativeButton(R.string.msg_exit, null)
+                    .show();
+            return true;
         }
 
         if (id == R.id.action_colour) {
-            Intent intent = new Intent(this, ColourActivity.class);
+            final int currentColor = ArrayUtils.indexOf(getResources().getStringArray(R.array.colour_choices), viewColour);
 
-            if (getIntent().getData() != null) {
-                intent.setData(getIntent().getData());
+            builder.setTitle(R.string.msg_choose_colour)
+                    .setSingleChoiceItems(R.array.colour_choices, currentColor, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            String[] colours = getResources().getStringArray(R.array.colour_choices);
+
+                            String colour = colours[which];
+                            viewColour = colour;
+                            mActivityInsertBinding.constraintLayoutView
+                                    .setBackgroundColor(JournalColourUtils
+                                            .getColourResource(InsertActivity.this, viewColour));
+
+                            dialog.dismiss();
+                        }
+                    })
+                    .setNegativeButton(R.string.msg_exit, null)
+                    .show();
+            return true;
+        }
+
+        if (id == R.id.action_share) {
+            final Intent shareIntent = createShareJournalIntent();
+            final PackageManager packageManager = this.getPackageManager();
+
+            if (shareIntent.resolveActivity(packageManager) == null) {
+                showSnackbar(getString(R.string.error_cant_send));
+                return true;
             }
 
-            intent.putExtra(TITLE_INDEX, mActivityInsertBinding.editTitle.getText().toString());
-            intent.putExtra(CONTENT_INDEX, mActivityInsertBinding.editContent.getText().toString());
+            if (mPassword != null && !(mPassword.isEmpty())) {
+                builder.setView(dialogLayout)
+                        .setTitle(getString(R.string.msg_unlock_password))
+                        .setPositiveButton(R.string.msg_unlock, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                String passwordEdit = mPasswordEdit.getText().toString();
 
-            startActivity(intent);
+                                if (passwordEdit != null && !(passwordEdit.isEmpty())) {
+                                    if (mPassword.matches(passwordEdit)) {
+                                        startActivity(shareIntent);
+                                    } else {
+                                        showSnackbar(getString(R.string.error_incorrect_password));
+                                    }
+                                } else {
+                                    showSnackbar(getString(R.string.error_incorrect_password));
+                                }
+                            }
+                        })
+                        .setNegativeButton(R.string.msg_exit, null)
+                        .show();
+            } else {
+                startActivity(shareIntent);
+            }
+            return true;
         }
 
         if (id == R.id.action_delete) {
-            onDelete();
-            finish();
+            final AlertDialog.Builder builderDelete = new AlertDialog.Builder(this);
+            builderDelete.setIcon(R.drawable.ic_delete_48px)
+                    .setTitle(getString(R.string.msg_delete))
+                    .setMessage(getString(R.string.msg_confirm_deletion))
+                    .setPositiveButton(R.string.msg_delete, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            onDelete();
+                            finish();
+                        }
+                    })
+                    .setNegativeButton(R.string.msg_exit, null);
+
+            if (mPassword != null && !(mPassword.isEmpty())) {
+                builder.setView(dialogLayout)
+                        .setTitle(getString(R.string.msg_unlock_password))
+                        .setPositiveButton(R.string.msg_unlock, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                String passwordEdit = mPasswordEdit.getText().toString();
+
+                                if (passwordEdit != null && !(passwordEdit.isEmpty())) {
+                                    if (mPassword.matches(passwordEdit)) {
+                                        builderDelete.show();
+                                    } else {
+                                        showSnackbar(getString(R.string.error_incorrect_password));
+                                    }
+                                } else {
+                                    showSnackbar(getString(R.string.error_incorrect_password));
+                                }
+                            }
+                        })
+                        .setNegativeButton(R.string.msg_exit, null)
+                        .show();
+            } else {
+                builderDelete.show();
+            }
+            return true;
         }
 
         if (id == R.id.action_logout) {
@@ -151,25 +285,12 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
                 onInsert();
             }
 
-            FirebaseAuth.getInstance().signOut();
+            MenuUtils.logoutAction(this);
 
-            GoogleSignInOptions googleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestIdToken(getString(R.string.default_web_client_id))
-                    .requestEmail()
-                    .build();
-
-            mGoogleSignInClient = GoogleSignIn.getClient(this, googleSignInOptions);
-            mGoogleSignInClient.signOut();
-
-            SharedPreferences sharedpreferences =
-                    this.getSharedPreferences(GoogleLoginActivity.MY_PREFRENCES, Context.MODE_PRIVATE);
-            SharedPreferences.Editor editor = sharedpreferences.edit();
-            editor.clear();
-            editor.apply();
-
-            Intent intent = new Intent(this, GoogleLoginActivity.class);
+            Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
             finish();
+            return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -194,6 +315,8 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        mCursor = data;
+
         boolean dataIsPresent = false;
 
         if (data != null && data.moveToFirst()) dataIsPresent = true;
@@ -207,11 +330,15 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
         mActivityInsertBinding.editContent.setText(content);
 
         String colour = data.getString(MainActivity.INDEX_JOURNAL_COLOUR);
-
         if (colour != null || !colour.isEmpty()) {
             mActivityInsertBinding.constraintLayoutView
                     .setBackgroundColor(JournalColourUtils.getColourResource(this, colour));
             viewColour = colour;
+        }
+
+        String password = data.getString(MainActivity.INDEX_JOURNAL_PASSWORD);
+        if (password != null && !(password.isEmpty())) {
+            mPassword = password;
         }
     }
 
@@ -237,19 +364,6 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
         return passed;
     }
 
-    private void setFieldsFromIntent() {
-        viewColour = getIntent().getStringExtra(COLOUR_INDEX);
-
-        String title = getIntent().getStringExtra(TITLE_INDEX);
-        mActivityInsertBinding.editTitle.setText(title);
-
-        String content = getIntent().getStringExtra(CONTENT_INDEX);
-        mActivityInsertBinding.editContent.setText(content);
-
-        mActivityInsertBinding.constraintLayoutView
-                .setBackgroundColor(JournalColourUtils.getColourResource(this, viewColour));
-    }
-
     private void onInsert(){
         ContentValues contentValues = new ContentValues();
 
@@ -261,7 +375,8 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
         contentValues.put(JournalContract.JournalEntry.COLUMN_CONTENT, content);
         contentValues.put(JournalContract.JournalEntry.COLUMN_TIMESTAMP, timestamp);
         contentValues.put(JournalContract.JournalEntry.COLUMN_COLOUR, viewColour);
-        contentValues.put(JournalContract.JournalEntry.COLUMN_EMAIL, GoogleLoginActivity.EMAIL_ACCOUNT);
+        contentValues.put(JournalContract.JournalEntry.COLUMN_EMAIL, LoginActivity.EMAIL_ACCOUNT);
+        contentValues.put(JournalContract.JournalEntry.COLUMN_PASSWORD, mPassword);
 
         if (mNewEntry) {
             TableTaskParams tableTaskParams =
@@ -282,5 +397,29 @@ public class InsertActivity extends AppCompatActivity implements LoaderManager.L
 
             new TableEventsUtils().execute(tableTaskParams);
         }
+    }
+
+    private Intent createShareJournalIntent() {
+        Intent intent = ShareCompat.IntentBuilder.from(this)
+                .setType("text/Plain")
+                .setText(mCursor.getString(MainActivity.INDEX_JOURNAL_TITLE) + JOURNAL_SHARE_HASHTAG
+                        + "\n\n" + mCursor.getString(MainActivity.INDEX_JOURNAL_CONTENT))
+                .getIntent();
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
+        return intent;
+    }
+
+    private void showSnackbar(String message) {
+        Snackbar.make(mActivityInsertBinding.constraintLayoutView, message, Snackbar.LENGTH_LONG).show();
+    }
+
+    public void showUnlockMenuItem() {
+        mUnlock.setVisible(true);
+        mLock.setVisible(false);
+    }
+
+    public void showLockMenuItem() {
+        mUnlock.setVisible(false);
+        mLock.setVisible(true);
     }
 }
